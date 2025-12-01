@@ -1,3 +1,4 @@
+import { useEffect, useState, useRef } from "react";
 import {
     Card,
     CardContent,
@@ -29,54 +30,23 @@ import {
 import CustomPagination from "@/components/ui/custom-pagination";
 import SearchInput from "@/components/ui/search-input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import CustomBreadcrumb from "@/components/ui/custom-breadcrumb";
-import { useEffect, useState, useRef } from "react";
 import { CiTrash } from "react-icons/ci";
 import { HiDotsVertical } from "react-icons/hi";
 import { GrEdit } from "react-icons/gr";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import CustomModal from "@/components/ui/custom-modal";
-import { toast } from "sonner";
 import { IoMdAdd } from "react-icons/io";
-import { GetDataSimple, DeleteData, PostDataTokenJson } from "@/services/data";
 import { FiUploadCloud } from "react-icons/fi";
-
-interface Student {
-    student_id: number;
-    user_id: number;
-    student_name: string;
-    student_surname: string;
-    student_fathername: string;
-    passport_series: string;
-    date_of_birth: string;
-    region_id: number;
-    region_name: string;
-    district_id: number;
-    district_name: string;
-    phone_number: string;
-    owner_additional_phone_number: string | null;
-    additional_phone_number: string | null;
-    university_name: string;
-    course_level: number;
-    university_group_name: string | null;
-    document_full_path: string;
-    available_in_terminal: number;
-    available_in_terminal_text: string;
-    is_blocked: number;
-    is_blocked_text: string;
-    is_active: number;
-    created_at: string;
-    updated_at: string | null;
-}
-
-interface ApiResponse {
-    page: number;
-    limit: number;
-    count: number;
-    pages: number;
-    result: Student[];
-}
+import {
+    Student,
+    Counts,
+    fetchStudents,
+    fetchCounts,
+    searchStudents,
+    deleteStudent,
+    uploadStudentToTerminal,
+} from "./data";
 
 const Students = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -84,7 +54,7 @@ const Students = () => {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
     const [activeTab, setActiveTab] = useState<string>("all");
-    const [counts, setCounts] = useState({
+    const [counts, setCounts] = useState<Counts>({
         all: 0,
         active: 0,
         blocked: 0,
@@ -103,97 +73,30 @@ const Students = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [totalPages, setTotalPages] = useState(1);
     const [isSearching, setIsSearching] = useState(false);
+    const [loading, setLoading] = useState(true);
     const searchTimeoutRef = useRef<number | null>(null);
 
-    const fetchStudents = async (
-        page: number = 1,
-        limit: number = 10,
+    const loadStudents = async (
+        page: number,
+        limit: number,
         isBlocked?: number
     ) => {
         try {
-            const blockedParam =
-                isBlocked !== undefined ? `&is_blocked=${isBlocked}` : "";
-            const data: ApiResponse = await GetDataSimple(
-                `api/student/list?page=${page}&limit=${limit}${blockedParam}`
-            );
-
-            setStudents(data.result);
-            setTotalPages(data.pages);
+            const { students: fetchedStudents, totalPages: fetchedTotalPages } =
+                await fetchStudents(page, limit, isBlocked);
+            setStudents(fetchedStudents);
+            setTotalPages(fetchedTotalPages);
         } catch (error) {
-            console.error("Error fetching students:", error);
-            toast.error("Ошибка загрузки студентов");
-        }
-    };
-
-    const fetchCounts = async () => {
-        try {
-            // Fetch all students count
-            const allRes = await GetDataSimple(
-                `api/student/list?page=1&limit=1`
-            );
-            // Fetch active students count
-            const activeRes = await GetDataSimple(
-                `api/student/list?page=1&limit=1&is_blocked=0`
-            );
-            // Fetch blocked students count
-            const blockedRes = await GetDataSimple(
-                `api/student/list?page=1&limit=1&is_blocked=1`
-            );
-
-            setCounts({
-                all: allRes?.count || 0,
-                active: activeRes?.count || 0,
-                blocked: blockedRes?.count || 0,
-            });
-        } catch (error) {
-            console.error("Error fetching counts:", error);
-        }
-    };
-
-    const searchStudents = async (keyword: string) => {
-        if (keyword.length < 3) {
-            // If keyword is less than 3 characters, fetch students based on active tab
-            const isBlocked =
-                activeTab === "active"
-                    ? 0
-                    : activeTab === "blocked"
-                    ? 1
-                    : undefined;
-            fetchStudents(currentPage, itemsPerPage, isBlocked);
-            return;
-        }
-
-        try {
-            setIsSearching(true);
-            const encodedKeyword = encodeURIComponent(keyword);
-            const response = await GetDataSimple(
-                `api/student/search?keyword=${encodedKeyword}`
-            );
-
-            // Filter search results based on active tab
-            let filteredResults = response?.result || response || [];
-            if (activeTab === "active") {
-                filteredResults = filteredResults.filter(
-                    (student: Student) => student.is_blocked === 0
-                );
-            } else if (activeTab === "blocked") {
-                filteredResults = filteredResults.filter(
-                    (student: Student) => student.is_blocked === 1
-                );
-            }
-
-            setStudents(filteredResults);
-            setTotalPages(1); // Search results are typically on one page
-        } catch (error) {
-            console.error("Error searching students:", error);
-            toast.error("Ошибка поиска студентов");
+            console.error("Error loading students:", error);
         } finally {
-            setIsSearching(false);
+            setLoading(false);
         }
     };
 
-    // Use students directly since we're doing server-side search
-    const currentStudents = students;
+    const loadCounts = async () => {
+        const fetchedCounts = await fetchCounts();
+        setCounts(fetchedCounts);
+    };
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -203,44 +106,63 @@ const Students = () => {
                 : activeTab === "blocked"
                 ? 1
                 : undefined;
-        fetchStudents(page, itemsPerPage, isBlocked);
+        setLoading(true);
+        loadStudents(page, itemsPerPage, isBlocked);
     };
 
     const handleTabChange = (value: string) => {
         setActiveTab(value);
         setCurrentPage(1);
         setSearchQuery("");
+        setLoading(true);
         const isBlocked =
             value === "active" ? 0 : value === "blocked" ? 1 : undefined;
-        fetchStudents(1, itemsPerPage, isBlocked);
+        loadStudents(1, itemsPerPage, isBlocked);
     };
 
     const handleItemsPerPageChange = (value: string) => {
         const newLimit = Number(value);
         setItemsPerPage(newLimit);
         setCurrentPage(1);
+        setLoading(true);
         const isBlocked =
             activeTab === "active"
                 ? 0
                 : activeTab === "blocked"
                 ? 1
                 : undefined;
-        fetchStudents(1, newLimit, isBlocked);
+        loadStudents(1, newLimit, isBlocked);
     };
 
-    // Debounced search handler
     const handleSearchChange = (value: string) => {
         setSearchQuery(value);
 
-        // Clear any existing timeout
         if (searchTimeoutRef.current) {
             clearTimeout(searchTimeoutRef.current);
         }
 
-        // Set a new timeout for search
-        searchTimeoutRef.current = setTimeout(() => {
-            searchStudents(value);
-        }, 100); // 100ms delay
+        searchTimeoutRef.current = setTimeout(async () => {
+            if (value.length < 3) {
+                const isBlocked =
+                    activeTab === "active"
+                        ? 0
+                        : activeTab === "blocked"
+                        ? 1
+                        : undefined;
+                setLoading(true);
+                loadStudents(currentPage, itemsPerPage, isBlocked);
+                return;
+            }
+
+            setIsSearching(true);
+            try {
+                const results = await searchStudents(value, activeTab);
+                setStudents(results);
+                setTotalPages(1);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 100);
     };
 
     const handleSelectUser = (studentId: number) => {
@@ -252,12 +174,10 @@ const Students = () => {
     };
 
     const handleSelectAll = () => {
-        if (selectedUsers?.length === currentStudents?.length) {
+        if (selectedUsers?.length === students?.length) {
             setSelectedUsers([]);
         } else {
-            setSelectedUsers(
-                currentStudents?.map((student) => student.student_id)
-            );
+            setSelectedUsers(students?.map((student) => student.student_id));
         }
     };
 
@@ -270,31 +190,22 @@ const Students = () => {
         if (!userToDelete) return;
 
         try {
-            await DeleteData(`api/student/delete/${userToDelete.id}`);
-            toast.success("Студент удалён", {
-                description: `${userToDelete.name} успешно удалён.`,
-                duration: 2500,
-            });
-
-            // Refresh students list after deletion
+            await deleteStudent(userToDelete.id);
             const isBlocked =
                 activeTab === "active"
                     ? 0
                     : activeTab === "blocked"
                     ? 1
                     : undefined;
-            fetchStudents(currentPage, itemsPerPage, isBlocked);
-            fetchCounts(); // Refresh counts
-
+            setLoading(true);
+            await Promise.all([
+                loadStudents(currentPage, itemsPerPage, isBlocked),
+                loadCounts(),
+            ]);
             setIsDeleteOpen(false);
             setUserToDelete(null);
-        } catch (error: any) {
-            console.error("Error deleting student:", error);
-            toast.error(
-                error?.response?.data?.error ||
-                    error?.response?.data?.message ||
-                    "Ошибка удаления студента"
-            );
+        } catch (error) {
+            // Error already handled in data.ts
         }
     };
 
@@ -312,34 +223,22 @@ const Students = () => {
         if (!studentToUpload) return;
 
         try {
-            await PostDataTokenJson(
-                `api/student/${studentToUpload.id}/upload-faceid`,
-                {}
-            );
-            toast.success("Студент загружен в терминал", {
-                description: `${studentToUpload.name} успешно загружен.`,
-                duration: 2500,
-            });
-
-            // Refresh students list after upload
+            await uploadStudentToTerminal(studentToUpload.id);
             const isBlocked =
                 activeTab === "active"
                     ? 0
                     : activeTab === "blocked"
                     ? 1
                     : undefined;
-            fetchStudents(currentPage, itemsPerPage, isBlocked);
-            fetchCounts(); // Refresh counts
-
+            setLoading(true);
+            await Promise.all([
+                loadStudents(currentPage, itemsPerPage, isBlocked),
+                loadCounts(),
+            ]);
             setIsUploadOpen(false);
             setStudentToUpload(null);
-        } catch (error: any) {
-            console.error("Error uploading student:", error);
-            toast.error(
-                error?.response?.data?.error ||
-                    error?.response?.data?.message ||
-                    "Ошибка загрузки студента в терминал"
-            );
+        } catch (error) {
+            // Error already handled in data.ts
         }
     };
 
@@ -349,8 +248,15 @@ const Students = () => {
     };
 
     useEffect(() => {
-        fetchCounts();
-        fetchStudents(currentPage, itemsPerPage); // Default: all students
+        const initializeData = async () => {
+            setLoading(true);
+            const isBlocked = undefined; // All students on initial load
+            await Promise.all([
+                loadCounts(),
+                loadStudents(1, itemsPerPage, isBlocked),
+            ]);
+        };
+        initializeData();
     }, []);
 
     useEffect(() => {
@@ -361,30 +267,26 @@ const Students = () => {
         };
     }, []);
 
+    const currentStudents = students;
+
     return (
         <div className="space-y-6">
             <div className="space-y-4 mb-10">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl  font-semibold text-gray-900 ">
+                        <h1 className="text-2xl font-semibold text-gray-900">
                             Все Студенты
                         </h1>
                     </div>
                     <Link to="/users/create">
-                        <Button className="bg-black text-white duration-300 hover:bg-black/70 rounded-xl ">
+                        <Button className="bg-black text-white duration-300 hover:bg-black/70 rounded-xl">
                             <IoMdAdd className="w-3 h-3" /> Добавить
                         </Button>
                     </Link>
                 </div>
-                {/* <CustomBreadcrumb
-                    items={[
-                        { label: "Панель управления", href: "/" },
-                        { label: "Сотрудники", isActive: true },
-                    ]}
-                /> */}
             </div>
 
-            <Card className="bg-white  rounded-2xl shadow-lg border border-gray-100 ">
+            <Card className="bg-white rounded-2xl shadow-lg border border-gray-100">
                 <CardHeader className="pb-4">
                     <div className="flex flex-col space-y-4">
                         <div className="flex justify-start w-full">
@@ -395,7 +297,6 @@ const Students = () => {
                             />
                         </div>
 
-                        {/* Status Tabs */}
                         <Tabs
                             value={activeTab}
                             onValueChange={handleTabChange}
@@ -435,9 +336,9 @@ const Students = () => {
                 </CardHeader>
                 <CardContent className="p-0">
                     <Table className="table-auto w-full">
-                        <TableHeader className="bg-mainbg/10 ">
+                        <TableHeader className="bg-mainbg/10">
                             <TableRow>
-                                <TableHead className="text-maintx ">
+                                <TableHead className="text-maintx">
                                     <Checkbox
                                         checked={
                                             selectedUsers?.length ===
@@ -465,13 +366,27 @@ const Students = () => {
                                 <TableHead className="text-maintx break-words whitespace-normal min-w-0 max-w-xs">
                                     Регион
                                 </TableHead>
-                                <TableHead className="text-right text-maintx ">
+                                <TableHead className="text-right text-maintx">
                                     Действия
                                 </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {isSearching ? (
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={8}
+                                        className="text-center py-8"
+                                    >
+                                        <div className="flex items-center justify-center space-x-2">
+                                            <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                                            <span className="text-gray-500">
+                                                Загрузка...
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : isSearching ? (
                                 <TableRow>
                                     <TableCell
                                         colSpan={8}
@@ -500,7 +415,7 @@ const Students = () => {
                                 currentStudents?.map((student) => (
                                     <TableRow
                                         key={student.student_id}
-                                        className="border-dashed border-gray-200  hover:bg-gray-100 "
+                                        className="border-dashed border-gray-200 hover:bg-gray-100"
                                     >
                                         <TableCell className="w-12">
                                             <Checkbox
@@ -530,7 +445,7 @@ const Students = () => {
                                                 <div className="min-w-0 flex-1">
                                                     <Link
                                                         to={`/details/${student.student_id}`}
-                                                        className="text-sm font-medium text-gray-900  hover:underline cursor-pointer transition-all duration-200 break-words"
+                                                        className="text-sm font-medium text-gray-900 hover:underline cursor-pointer transition-all duration-200 break-words"
                                                     >
                                                         {
                                                             student.student_surname
@@ -631,7 +546,7 @@ const Students = () => {
                         </TableBody>
                     </Table>
                 </CardContent>
-                <CardFooter className="flex justify-between items-center border-t border-gray-200  pt-4">
+                <CardFooter className="flex justify-between items-center border-t border-gray-200 pt-4">
                     <div className="flex items-center gap-2">
                         <label htmlFor="" className="text-gray-500 text-sm">
                             Строк на странице:
@@ -658,7 +573,7 @@ const Students = () => {
                     />
                 </CardFooter>
             </Card>
-            {/* Delete Confirmation Modal */}
+
             <CustomModal
                 showTrigger={false}
                 open={isDeleteOpen}
@@ -674,9 +589,9 @@ const Students = () => {
                 showCloseButton={false}
             >
                 <div className="space-y-2">
-                    <p className="text-sm text-gray-600 ">
+                    <p className="text-sm text-gray-600">
                         Вы уверены, что хотите удалить студента{" "}
-                        <span className="font-semibold text-gray-900 ">
+                        <span className="font-semibold text-gray-900">
                             {userToDelete?.name}
                         </span>
                         ? Это действие нельзя отменить.
@@ -684,7 +599,6 @@ const Students = () => {
                 </div>
             </CustomModal>
 
-            {/* Upload Confirmation Modal */}
             <CustomModal
                 showTrigger={false}
                 open={isUploadOpen}
@@ -700,9 +614,9 @@ const Students = () => {
                 showCloseButton={false}
             >
                 <div className="space-y-2">
-                    <p className="text-sm text-gray-600 ">
+                    <p className="text-sm text-gray-600">
                         Вы хотите загрузить этого студента в терминал{" "}
-                        <span className="font-semibold text-gray-900 ">
+                        <span className="font-semibold text-gray-900">
                             {studentToUpload?.name}
                         </span>
                         ?

@@ -1,13 +1,8 @@
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
-// import { SiAnalogue } from "react-icons/si";
-// import { FaUserFriends } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { useEffect, useState } from "react";
-// import { IoTimer } from "react-icons/io5";
-// import { FaUserCog } from "react-icons/fa";
 import { PiStudentFill } from "react-icons/pi";
-
 
 interface SidebarProps {
     className?: string;
@@ -19,21 +14,7 @@ const navigation = [
         href: "/",
         icon: <PiStudentFill className="w-5 h-5" />,
     },
-    // {
-    //     name: "Сотрудники",
-    //     href: "/users",
-    //     icon: <FaUserFriends className="w-5 h-5" />,
-    // },
-    // {
-    //     name: "Смены",
-    //     href: "/shifts",
-    //     icon: <IoTimer className="w-5 h-5" />,
-    // },
-    // {
-    //     name: "Должности",
-    //     href: "/positions",
-    //     icon: <FaUserCog className="w-5 h-5" />,
-    // },
+
 ];
 
 const Sidebar = ({ className }: SidebarProps) => {
@@ -65,12 +46,10 @@ const Sidebar = ({ className }: SidebarProps) => {
                 className
             )}
         >
-            {/* Logo Section */}
             <div className="p-6">
-                <h2 className="text-xl font-bold text-maintx ">Hostel</h2>
+                <h2 className="text-xl font-bold text-maintx ">Yotoqxona</h2>
             </div>
 
-            {/* Navigation Menu */}
             <nav className="flex-1 py-4">
                 <ul className="space-y-1">
                     {navigation.map((item) => {

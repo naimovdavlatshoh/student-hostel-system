@@ -4,54 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomCombobox } from "@/components/ui/custom-form";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProgressAuto } from "@/components/ui/progress";
-import { GetDataSimple, DeleteData, PostDataToken } from "@/services/data";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import CustomModal from "@/components/ui/custom-modal";
 import { CiTrash } from "react-icons/ci";
-
-interface Student {
-    id: number;
-    user_id: number;
-    student_name: string;
-    student_surname: string;
-    student_fathername: string;
-    passport_series: string;
-    date_of_birth: string;
-    region_id: number;
-    district_id: number;
-    phone_number: string;
-    owner_additional_phone_number: string | null;
-    additional_phone_number: string | null;
-    university_name: string;
-    course_level: number;
-    university_group_name: string | null;
-    is_blocked: number;
-    available_in_terminal: number;
-    is_active: number;
-    created_at: string;
-    updated_at: string | null;
-    region_name: string;
-    district_name: string;
-    document_short_path: string;
-    documents: Document[];
-}
-
-interface Document {
-    document_id: number;
-    student_id: number;
-    document_full_path: string;
-    document_short_path: string;
-    document_format: string;
-    document_type: number;
-    document_type_text: string;
-    is_active: number;
-    created_at: string;
-    updated_at: string | null;
-}
+import {
+    Student,
+    Document,
+    UploadFiles,
+    fetchStudentData,
+    fetchRegions,
+    fetchDistricts,
+    getAvatarFromDocuments,
+    formatDate,
+    deleteDocument,
+    uploadDocuments,
+    isUploadDisabled,
+} from "./data";
+import { RiArrowGoBackLine } from "react-icons/ri";
+import { BASE_URL } from "@/services/data";
 
 const Account = () => {
     const { id } = useParams();
@@ -68,64 +40,50 @@ const Account = () => {
         name: string;
     } | null>(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const [uploadFiles, setUploadFiles] = useState({
-        passport_copy: null as File | null,
-        student_photo: null as File | null,
-        other_document: null as File | null,
+    const [uploadFiles, setUploadFiles] = useState<UploadFiles>({
+        passport_copy: null,
+        student_photo: null,
+        other_document: null,
     });
 
     useEffect(() => {
-        setLoading(true);
-        const fetchData = async () => {
+        const loadData = async () => {
+            if (!id) return;
+
             try {
-                // Fetch student data
-                const studentRes = await GetDataSimple(`api/student/${id}`);
-                setStudent(studentRes);
+                setLoading(true);
+                const [studentRes, regionsRes] = await Promise.all([
+                    fetchStudentData(id),
+                    fetchRegions(),
+                ]);
 
-                // Fetch regions
-                const regionsRes = await GetDataSimple("api/location/regions");
-                setRegions(regionsRes?.result || regionsRes || []);
+                if (studentRes) {
+                    setStudent(studentRes);
+                    setRegions(regionsRes);
 
-                // Set avatar if student photo exists
-                if (studentRes?.documents) {
-                    const photoDoc = studentRes.documents.find(
-                        (doc: Document) => doc.document_type === 2
+                    const avatarUrl = getAvatarFromDocuments(
+                        studentRes.documents
                     );
-                    if (photoDoc?.document_full_path) {
-                        const baseUrl =
-                            import.meta.env.VITE_BASE_URL ||
-                            "https://hostelapi.argon.uz";
-                        setAvatarSrc(baseUrl + photoDoc.document_full_path);
+                    if (avatarUrl) {
+                        setAvatarSrc(avatarUrl);
+                    }
+
+                    if (studentRes.region_id) {
+                        const districtsRes = await fetchDistricts(
+                            studentRes.region_id
+                        );
+                        setDistricts(districtsRes);
                     }
                 }
-
-                // Fetch districts if region_id exists
-                if (studentRes?.region_id) {
-                    const districtsRes = await GetDataSimple(
-                        `api/location/districts/${studentRes.region_id}`
-                    );
-                    setDistricts(districtsRes?.result || districtsRes || []);
-                }
-                setLoading(false);
             } catch (error) {
-                console.error("Error fetching data:", error);
-                toast.error("Ошибка загрузки данных студента");
+                console.error("Error loading data:", error);
+            } finally {
+                setLoading(false);
             }
         };
 
-        if (id) {
-            fetchData();
-        }
+        loadData();
     }, [id]);
-
-    const formatDate = (dateString: string) => {
-        if (!dateString) return "—";
-        const date = new Date(dateString);
-        const day = date.getDate().toString().padStart(2, "0");
-        const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}.${month}.${year}`;
-    };
 
     const openDeleteModal = (doc: { id: number; name: string }) => {
         setDocumentToDelete({ id: doc.id, name: doc.name });
@@ -133,45 +91,24 @@ const Account = () => {
     };
 
     const handleConfirmDelete = async () => {
-        if (!documentToDelete) return;
+        if (!documentToDelete || !id) return;
 
         try {
-            await DeleteData(`api/student/document/${documentToDelete.id}`);
-            toast.success("Документ удалён", {
-                description: `${documentToDelete.name} успешно удалён.`,
-                duration: 2500,
-            });
-
-            // Refresh student data after deletion
-            if (id) {
-                const studentRes = await GetDataSimple(`api/student/${id}`);
+            await deleteDocument(documentToDelete.id);
+            const studentRes = await fetchStudentData(id);
+            if (studentRes) {
                 setStudent(studentRes);
-
-                // Update avatar if needed
-                if (studentRes?.documents) {
-                    const photoDoc = studentRes.documents.find(
-                        (doc: Document) => doc.document_type === 2
-                    );
-                    if (photoDoc?.document_full_path) {
-                        const baseUrl =
-                            import.meta.env.VITE_BASE_URL ||
-                            "https://hostelapi.argon.uz";
-                        setAvatarSrc(baseUrl + photoDoc.document_full_path);
-                    } else {
-                        setAvatarSrc("/avatar-1.webp");
-                    }
+                const avatarUrl = getAvatarFromDocuments(studentRes.documents);
+                if (avatarUrl) {
+                    setAvatarSrc(avatarUrl);
+                } else {
+                    setAvatarSrc("/avatar-1.webp");
                 }
             }
-
             setIsDeleteOpen(false);
             setDocumentToDelete(null);
-        } catch (error: any) {
-            console.error("Error deleting document:", error);
-            toast.error(
-                error?.response?.data?.error ||
-                    error?.response?.data?.message ||
-                    "Ошибка удаления документа"
-            );
+        } catch (error) {
+            // Error already handled in data.ts
         }
     };
 
@@ -182,75 +119,37 @@ const Account = () => {
 
     const handleFileChange = (
         field: "passport_copy" | "student_photo" | "other_document",
-        file: File | null
+        e: React.ChangeEvent<HTMLInputElement>
     ) => {
         setUploadFiles((prev) => ({
             ...prev,
-            [field]: file,
+            [field]: e.target.files?.[0] || null,
         }));
     };
 
-    const isUploadDisabled = () => {
-        return (
-            !uploadFiles.passport_copy &&
-            !uploadFiles.student_photo &&
-            !uploadFiles.other_document
-        );
-    };
-
     const handleUploadDocument = async () => {
-        if (isUploadDisabled() || !id) return;
+        if (isUploadDisabled(uploadFiles) || !id) return;
 
         try {
-            const formData = new FormData();
-
-            if (uploadFiles.passport_copy) {
-                formData.append("passport_copy", uploadFiles.passport_copy);
-            }
-            if (uploadFiles.student_photo) {
-                formData.append("student_photo", uploadFiles.student_photo);
-            }
-            if (uploadFiles.other_document) {
-                formData.append("other_document", uploadFiles.other_document);
-            }
-
-            await PostDataToken(`api/student/${id}/upload-document`, formData);
-
-            toast.success("Документы успешно загружены");
-
-            // Refresh student data
-            const studentRes = await GetDataSimple(`api/student/${id}`);
-            setStudent(studentRes);
-
-            // Update avatar if needed
-            if (studentRes?.documents) {
-                const photoDoc = studentRes.documents.find(
-                    (doc: Document) => doc.document_type === 2
-                );
-                if (photoDoc?.document_full_path) {
-                    const baseUrl =
-                        import.meta.env.VITE_BASE_URL ||
-                        "https://hostelapi.argon.uz";
-                    setAvatarSrc(baseUrl + photoDoc.document_full_path);
+            await uploadDocuments(id, uploadFiles);
+            const studentRes = await fetchStudentData(id);
+            if (studentRes) {
+                setStudent(studentRes);
+                const avatarUrl = getAvatarFromDocuments(studentRes.documents);
+                if (avatarUrl) {
+                    setAvatarSrc(avatarUrl);
                 } else {
                     setAvatarSrc("/avatar-1.webp");
                 }
             }
-
-            // Reset form
             setUploadFiles({
                 passport_copy: null,
                 student_photo: null,
                 other_document: null,
             });
             setIsUploadModalOpen(false);
-        } catch (error: any) {
-            console.error("Error uploading documents:", error);
-            toast.error(
-                error?.response?.data?.error ||
-                    error?.response?.data?.message ||
-                    "Ошибка загрузки документов"
-            );
+        } catch (error) {
+            // Error already handled in data.ts
         }
     };
 
@@ -265,7 +164,7 @@ const Account = () => {
 
     if (loading) {
         return (
-            <div className="h-[80vh] w-full flex justify-center items-center ">
+            <div className="h-[80vh] w-full flex justify-center items-center">
                 <div className="w-[400px]">
                     <ProgressAuto
                         durationMs={500}
@@ -285,14 +184,16 @@ const Account = () => {
         );
     }
 
-    // const fullName = `${student.student_surname} ${student.student_name} ${student.student_fathername}`;
-
     return (
-        <div className="space-y-6">
-            {/* Header */}
+        <div className="space-y-6 pb-10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-semibold text-gray-900 ">
+                <div className="flex items-center gap-2 ">
+                    <Link to="/">
+                        <Button className="rounded-xl" size={"sm"}>
+                            <RiArrowGoBackLine className="w-6 h-6" />
+                        </Button>
+                    </Link>
+                    <h1 className="text-2xl font-semibold text-gray-900">
                         Аккаунт -{" "}
                         <span className="text-maintx">
                             {student.student_name} {student.student_surname}
@@ -301,21 +202,10 @@ const Account = () => {
                 </div>
             </div>
 
-            {/* Breadcrumb */}
-            {/* <CustomBreadcrumb
-                items={[
-                    { label: "Панель управления", href: "/" },
-                    { label: "Студенты", href: "/users" },
-                    { label: fullName, isActive: true },
-                ]}
-            /> */}
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Section - Photo and Info */}
                 <div className="space-y-6 lg:col-span-1">
-                    <Card className="bg-white  rounded-2xl shadow-lg border border-gray-100 ">
+                    <Card className="bg-white rounded-2xl shadow-lg border border-gray-100">
                         <CardContent className="space-y-4 py-14">
-                            {/* Photo */}
                             <div className="flex flex-col items-center space-y-8">
                                 <div className="relative w-48 h-48 rounded-full border-2 border-dashed border-gray-300 overflow-hidden p-1.5 bg-gray-50">
                                     <img
@@ -324,11 +214,8 @@ const Account = () => {
                                         className="w-full h-full object-cover rounded-full"
                                     />
                                 </div>
-
-                                {/* File Info */}
-                                <div className="text-center text-md font-semibold text-gray-800 ">
+                                <div className="text-center text-md font-semibold text-gray-800">
                                     <p>
-                                        {" "}
                                         {student.student_name}{" "}
                                         {student.student_surname}
                                     </p>
@@ -336,23 +223,22 @@ const Account = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    {/* Quick Info */}
-                    <Card className="bg-white  rounded-2xl shadow-lg border border-gray-100 ">
+                    <Card className="bg-white rounded-2xl shadow-lg border border-gray-100">
                         <CardHeader>
-                            <CardTitle className="text-base font-semibold text-gray-900 ">
+                            <CardTitle className="text-base font-semibold text-gray-900">
                                 Информация
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">Регион</span>
-                                <span className="text-gray-900  font-medium">
+                                <span className="text-gray-900 font-medium">
                                     {student.region_name || "—"}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">Район</span>
-                                <span className="text-gray-900  font-medium">
+                                <span className="text-gray-900 font-medium">
                                     {student.district_name || "—"}
                                 </span>
                             </div>
@@ -360,19 +246,19 @@ const Account = () => {
                                 <span className="text-gray-500">
                                     Университет
                                 </span>
-                                <span className="text-gray-900  font-medium">
+                                <span className="text-gray-900 font-medium">
                                     {student.university_name || "—"}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">Курс</span>
-                                <span className="text-gray-900  font-medium">
+                                <span className="text-gray-900 font-medium">
                                     {student.course_level || "—"}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">Статус</span>
-                                <span className="text-gray-900  font-medium">
+                                <span className="text-gray-900 font-medium">
                                     {student.is_blocked === 0
                                         ? "Активный"
                                         : "Заблокирован"}
@@ -390,7 +276,7 @@ const Account = () => {
                                     }`}
                                 >
                                     {student.available_in_terminal === 1
-                                        ? "загружено "
+                                        ? "загружено"
                                         : "Не загружено"}
                                 </span>
                             </div>
@@ -398,12 +284,11 @@ const Account = () => {
                     </Card>
                 </div>
 
-                {/* Right Section - Student Details */}
-                <Card className="bg-white  rounded-2xl shadow-lg border lg:col-span-2 border-gray-100  flex flex-col">
+                <Card className="bg-white rounded-2xl shadow-lg border lg:col-span-2 border-gray-100 flex flex-col">
                     <CardHeader>
                         <CardTitle className="text-lg font-semibold text-gray-900 flex justify-between items-center gap-2">
                             <h1>Данные студента</h1>
-                            {activeTab == "info" ? (
+                            {activeTab === "info" ? (
                                 <Button
                                     onClick={() => navigate(`/user/${id}`)}
                                     className="rounded-xl px-5"
@@ -414,7 +299,7 @@ const Account = () => {
                             ) : (
                                 <Button
                                     onClick={() => setIsUploadModalOpen(true)}
-                                    className=" text-white rounded-xl px-5"
+                                    className="text-white rounded-xl px-5"
                                     size={"sm"}
                                 >
                                     Загрузить документ
@@ -447,7 +332,7 @@ const Account = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-gray-700 ">
+                                            <Label className="text-sm font-medium text-gray-700">
                                                 Имя
                                             </Label>
                                             <Input
@@ -457,9 +342,8 @@ const Account = () => {
                                                 className="h-12 rounded-xl border-gray-200 bg-gray-50"
                                             />
                                         </div>
-
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-gray-700 ">
+                                            <Label className="text-sm font-medium text-gray-700">
                                                 Фамилия
                                             </Label>
                                             <Input
@@ -469,9 +353,8 @@ const Account = () => {
                                                 className="h-12 rounded-xl border-gray-200 bg-gray-50"
                                             />
                                         </div>
-
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-gray-700 ">
+                                            <Label className="text-sm font-medium text-gray-700">
                                                 Отчество
                                             </Label>
                                             <Input
@@ -483,9 +366,8 @@ const Account = () => {
                                                 className="h-12 rounded-xl border-gray-200 bg-gray-50"
                                             />
                                         </div>
-
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-gray-700 ">
+                                            <Label className="text-sm font-medium text-gray-700">
                                                 Серия паспорта
                                             </Label>
                                             <Input
@@ -495,9 +377,8 @@ const Account = () => {
                                                 className="h-12 rounded-xl border-gray-200 bg-gray-50"
                                             />
                                         </div>
-
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-gray-700 ">
+                                            <Label className="text-sm font-medium text-gray-700">
                                                 Дата рождения
                                             </Label>
                                             <Input
@@ -509,8 +390,18 @@ const Account = () => {
                                                 className="h-12 rounded-xl border-gray-200 bg-gray-50"
                                             />
                                         </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Название университета
+                                            </Label>
+                                            <Input
+                                                type="text"
+                                                value={student.university_name}
+                                                readOnly
+                                                className="h-12 rounded-xl border-gray-200 bg-gray-50"
+                                            />
+                                        </div>
                                     </div>
-
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <CustomCombobox
@@ -531,7 +422,6 @@ const Account = () => {
                                                     }))}
                                             />
                                         </div>
-
                                         <div className="space-y-2">
                                             <CustomCombobox
                                                 label="Район"
@@ -551,9 +441,8 @@ const Account = () => {
                                                     }))}
                                             />
                                         </div>
-
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-gray-700 ">
+                                            <Label className="text-sm font-medium text-gray-700">
                                                 Номер телефона
                                             </Label>
                                             <Input
@@ -563,21 +452,38 @@ const Account = () => {
                                                 className="h-12 rounded-xl border-gray-200 bg-gray-50"
                                             />
                                         </div>
-
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-gray-700 ">
-                                                Название университета
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Дополнительный номер телефона
+                                                владельца
                                             </Label>
                                             <Input
-                                                type="text"
-                                                value={student.university_name}
+                                                type="tel"
+                                                value={
+                                                    student.owner_additional_phone_number ||
+                                                    "—"
+                                                }
+                                                readOnly
+                                                className="h-12 rounded-xl border-gray-200 bg-gray-50"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-gray-700">
+                                                Дополнительный номер телефона
+                                            </Label>
+                                            <Input
+                                                type="tel"
+                                                value={
+                                                    student.additional_phone_number ||
+                                                    "—"
+                                                }
                                                 readOnly
                                                 className="h-12 rounded-xl border-gray-200 bg-gray-50"
                                             />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-gray-700 ">
+                                            <Label className="text-sm font-medium text-gray-700">
                                                 Курс
                                             </Label>
                                             <Input
@@ -599,12 +505,8 @@ const Account = () => {
                                     <div className="space-y-4">
                                         {student.documents.map(
                                             (doc: Document) => {
-                                                const baseUrl =
-                                                    import.meta.env
-                                                        .VITE_BASE_URL ||
-                                                    "https://hostelapi.argon.uz";
                                                 const fullUrl =
-                                                    baseUrl +
+                                                    BASE_URL +
                                                     doc.document_full_path;
 
                                                 return (
@@ -629,31 +531,19 @@ const Account = () => {
                                                                     </p>
                                                                 </div>
                                                                 <div className="flex gap-2">
-                                                                    {doc.document_format ===
-                                                                    "pdf" ? (
-                                                                        <a
-                                                                            href={
-                                                                                fullUrl
-                                                                            }
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition-colors"
-                                                                        >
-                                                                            Открыть
-                                                                            PDF
-                                                                        </a>
-                                                                    ) : (
-                                                                        <a
-                                                                            href={
-                                                                                fullUrl
-                                                                            }
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition-colors"
-                                                                        >
-                                                                            Открыть
-                                                                        </a>
-                                                                    )}
+                                                                    <a
+                                                                        href={
+                                                                            fullUrl
+                                                                        }
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition-colors"
+                                                                    >
+                                                                        {doc.document_format ===
+                                                                        "pdf"
+                                                                            ? "Открыть PDF"
+                                                                            : "Открыть"}
+                                                                    </a>
                                                                     <button
                                                                         onClick={() =>
                                                                             openDeleteModal(
@@ -686,7 +576,6 @@ const Account = () => {
                 </Card>
             </div>
 
-            {/* Delete Document Confirmation Modal */}
             <CustomModal
                 showTrigger={false}
                 open={isDeleteOpen}
@@ -702,9 +591,9 @@ const Account = () => {
                 showCloseButton={false}
             >
                 <div className="space-y-2">
-                    <p className="text-sm text-gray-600 ">
+                    <p className="text-sm text-gray-600">
                         Вы уверены, что хотите удалить документ{" "}
-                        <span className="font-semibold text-gray-900 ">
+                        <span className="font-semibold text-gray-900">
                             {documentToDelete?.name}
                         </span>
                         ? Это действие нельзя отменить.
@@ -712,7 +601,6 @@ const Account = () => {
                 </div>
             </CustomModal>
 
-            {/* Upload Document Modal */}
             <CustomModal
                 showTrigger={false}
                 open={isUploadModalOpen}
@@ -722,86 +610,66 @@ const Account = () => {
                 cancelText="Отмена"
                 confirmBg="bg-maintx"
                 confirmBgHover="bg-maintx/80"
-                confirmDisabled={isUploadDisabled()}
+                confirmDisabled={isUploadDisabled(uploadFiles)}
                 onConfirm={handleUploadDocument}
                 onCancel={handleCancelUpload}
                 size="lg"
                 showCloseButton={false}
             >
                 <div className="space-y-4">
-                    {/* Passport Copy */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                            Копия паспорта
+                            Копия паспорта (PDF)
                         </Label>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                type="file"
-                                accept=".pdf"
-                                onChange={(e) =>
-                                    handleFileChange(
-                                        "passport_copy",
-                                        e.target.files?.[0] || null
-                                    )
-                                }
-                                className="h-10 rounded-xl border-gray-200"
-                            />
-                            {uploadFiles.passport_copy && (
-                                <span className="text-sm text-gray-600 truncate max-w-[200px]">
-                                    {uploadFiles.passport_copy.name}
-                                </span>
-                            )}
-                        </div>
+                        <Input
+                            type="file"
+                            accept=".pdf"
+                            onChange={(e) =>
+                                handleFileChange("passport_copy", e)
+                            }
+                            className="h-12 rounded-xl border-gray-200 bg-gray-50"
+                        />
+                        {uploadFiles.passport_copy && (
+                            <p className="text-xs text-gray-500 mt-1">
+                                Выбран файл: {uploadFiles.passport_copy.name}
+                            </p>
+                        )}
                     </div>
-
-                    {/* Student Photo */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                            Фото студента
+                            Фото студента (JPG, PNG)
                         </Label>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                type="file"
-                                accept=".jpg,.jpeg,.png"
-                                onChange={(e) =>
-                                    handleFileChange(
-                                        "student_photo",
-                                        e.target.files?.[0] || null
-                                    )
-                                }
-                                className="h-10 rounded-xl border-gray-200"
-                            />
-                            {uploadFiles.student_photo && (
-                                <span className="text-sm text-gray-600 truncate max-w-[200px]">
-                                    {uploadFiles.student_photo.name}
-                                </span>
-                            )}
-                        </div>
+                        <Input
+                            type="file"
+                            accept=".jpg,.jpeg,.png"
+                            onChange={(e) =>
+                                handleFileChange("student_photo", e)
+                            }
+                            className="h-12 rounded-xl border-gray-200 bg-gray-50"
+                        />
+                        {uploadFiles.student_photo && (
+                            <p className="text-xs text-gray-500 mt-1">
+                                Выбран файл: {uploadFiles.student_photo.name}
+                            </p>
+                        )}
                     </div>
-
-                    {/* Other Document */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                            Другой документ
+                            Другой документ (PDF, JPG, PNG)
                         </Label>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                type="file"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                onChange={(e) =>
-                                    handleFileChange(
-                                        "other_document",
-                                        e.target.files?.[0] || null
-                                    )
-                                }
-                                className="h-10 rounded-xl border-gray-200"
-                            />
-                            {uploadFiles.other_document && (
-                                <span className="text-sm text-gray-600 truncate max-w-[200px]">
-                                    {uploadFiles.other_document.name}
-                                </span>
-                            )}
-                        </div>
+                        <Input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) =>
+                                handleFileChange("other_document", e)
+                            }
+                            className="h-12 rounded-xl border-gray-200 bg-gray-50"
+                        />
+                        {uploadFiles.other_document && (
+                            <p className="text-xs text-gray-500 mt-1">
+                                Выбран файл: {uploadFiles.other_document.name}
+                            </p>
+                        )}
                     </div>
                 </div>
             </CustomModal>

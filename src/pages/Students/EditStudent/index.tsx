@@ -4,18 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomCombobox } from "@/components/ui/custom-form";
-
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { ProgressAuto } from "@/components/ui/progress";
-import { GetDataSimple, PostDataTokenJson } from "@/services/data";
 import { toast } from "sonner";
+import {
+    EditFormData,
+    fetchStudentData,
+    fetchRegions,
+    fetchDistricts,
+    parseDateToFormData,
+    processDateChange,
+    validateForm,
+    updateStudent,
+} from "./data";
+import { RiArrowGoBackLine } from "react-icons/ri";
 
 const EditStudent = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [isUpdating, setIsUpdating] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<EditFormData>({
         student_name: "",
         student_surname: "",
         student_fathername: "",
@@ -27,6 +36,8 @@ const EditStudent = () => {
         region_id: "",
         district_id: "",
         phone_number: "",
+        owner_additional_phone_number: "",
+        additional_phone_number: "",
         university_name: "",
         course_level: "",
         university_group_name: "",
@@ -37,19 +48,20 @@ const EditStudent = () => {
     const [districts, setDistricts] = useState<any[]>([]);
 
     useEffect(() => {
-        const fetchData = async () => {
+        const loadData = async () => {
+            if (!id) return;
+
             try {
-                // Fetch student data
-                const studentRes = await GetDataSimple(`api/student/${id}`);
+                setLoading(true);
+                const [studentRes, regionsRes] = await Promise.all([
+                    fetchStudentData(id),
+                    fetchRegions(),
+                ]);
 
                 if (studentRes) {
-                    // Parse date_of_birth to DD MM YYYY
-                    const dateParts = studentRes.date_of_birth
-                        ? studentRes.date_of_birth.split("-")
-                        : ["", "", ""];
-                    const year = dateParts[0] || "";
-                    const month = dateParts[1] || "";
-                    const day = dateParts[2] || "";
+                    const { day, month, year } = parseDateToFormData(
+                        studentRes.date_of_birth
+                    );
 
                     setFormData({
                         student_name: studentRes.student_name || "",
@@ -63,6 +75,10 @@ const EditStudent = () => {
                         region_id: studentRes.region_id?.toString() || "",
                         district_id: studentRes.district_id?.toString() || "",
                         phone_number: studentRes.phone_number || "",
+                        owner_additional_phone_number:
+                            studentRes.owner_additional_phone_number || "",
+                        additional_phone_number:
+                            studentRes.additional_phone_number || "",
                         university_name: studentRes.university_name || "",
                         course_level: studentRes.course_level?.toString() || "",
                         university_group_name:
@@ -70,33 +86,23 @@ const EditStudent = () => {
                         is_blocked: studentRes.is_blocked?.toString() || "0",
                     });
 
-                    // Fetch regions
-                    const regionsRes = await GetDataSimple(
-                        "api/location/regions"
-                    );
-                    setRegions(regionsRes?.result || regionsRes || []);
+                    setRegions(regionsRes);
 
-                    // Fetch districts if region_id exists
                     if (studentRes.region_id) {
-                        const districtsRes = await GetDataSimple(
-                            `api/location/districts/${studentRes.region_id}`
+                        const districtsRes = await fetchDistricts(
+                            studentRes.region_id
                         );
-                        setDistricts(
-                            districtsRes?.result || districtsRes || []
-                        );
+                        setDistricts(districtsRes);
                     }
                 }
             } catch (error) {
-                console.error("Error fetching student data:", error);
-                toast.error("Ошибка загрузки данных студента");
+                console.error("Error loading data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        if (id) {
-            fetchData();
-        }
+        loadData();
     }, [id]);
 
     const handleInputChange = (field: string, value: string) => {
@@ -105,10 +111,8 @@ const EditStudent = () => {
             [field]: value,
         }));
 
-        // If region changes, fetch districts for that region
         if (field === "region_id" && value) {
-            fetchDistricts(value);
-            // Reset district selection when region changes
+            loadDistricts(value);
             setFormData((prev) => ({
                 ...prev,
                 district_id: "",
@@ -116,114 +120,38 @@ const EditStudent = () => {
         }
     };
 
-    const fetchDistricts = async (regionId: string) => {
-        try {
-            const districtsRes = await GetDataSimple(
-                `api/location/districts/${regionId}`
-            );
-            setDistricts(districtsRes?.result || districtsRes || []);
-        } catch (error) {
-            console.error("Error fetching districts:", error);
-            toast.error("Ошибка загрузки районов");
-        }
+    const loadDistricts = async (regionId: string) => {
+        const fetchedDistricts = await fetchDistricts(parseInt(regionId));
+        setDistricts(fetchedDistricts);
     };
 
     const handleDateChange = (
         field: "date_day" | "date_month" | "date_year",
         value: string
     ) => {
-        // Only allow numbers
-        const numericValue = value.replace(/\D/g, "");
-
-        let processedValue = numericValue;
-
-        // Limit based on field type
-        if (field === "date_day") {
-            // Day: max 31, max 2 digits
-            if (numericValue.length > 2) return;
-            const num = parseInt(numericValue);
-            if (num > 31) processedValue = "31";
-        } else if (field === "date_month") {
-            // Month: max 12, max 2 digits
-            if (numericValue.length > 2) return;
-            const num = parseInt(numericValue);
-            if (num > 12) processedValue = "12";
-        } else if (field === "date_year") {
-            // Year: max 4 digits
-            if (numericValue.length > 4) return;
-        }
-
-        setFormData((prev) => {
-            const newData = {
-                ...prev,
-                [field]: processedValue,
-            };
-
-            // Combine date parts into date_of_birth format (YYYY-MM-DD)
-            const day = newData.date_day.padStart(2, "0");
-            const month = newData.date_month.padStart(2, "0");
-            const year = newData.date_year;
-
-            if (day && month && year && year.length === 4) {
-                newData.date_of_birth = `${year}-${month}-${day}`;
-            } else {
-                newData.date_of_birth = "";
-            }
-
-            return newData;
-        });
+        const newData = processDateChange(field, value, formData);
+        setFormData((prev) => ({
+            ...prev,
+            ...newData,
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate required fields
-        if (
-            !formData.student_name.trim() ||
-            !formData.student_surname.trim() ||
-            !formData.student_fathername.trim() ||
-            !formData.passport_series.trim() ||
-            !formData.date_of_birth ||
-            !formData.region_id ||
-            !formData.district_id ||
-            !formData.phone_number.trim() ||
-            !formData.university_name.trim() ||
-            !formData.course_level
-        ) {
+        if (!validateForm(formData)) {
             toast.error("Пожалуйста, заполните все обязательные поля");
             return;
         }
 
+        if (!id) return;
+
         try {
             setIsUpdating(true);
-
-            const updateData = {
-                student_name: formData.student_name.trim(),
-                student_surname: formData.student_surname.trim(),
-                student_fathername: formData.student_fathername.trim(),
-                passport_series: formData.passport_series.trim(),
-                date_of_birth: formData.date_of_birth,
-                region_id: parseInt(formData.region_id),
-                district_id: parseInt(formData.district_id),
-                phone_number: formData.phone_number.trim(),
-                university_name: formData.university_name.trim(),
-                course_level: parseInt(formData.course_level),
-                university_group_name:
-                    formData.university_group_name.trim() || null,
-                is_blocked: parseInt(formData.is_blocked),
-            };
-
-            await PostDataTokenJson(`api/student/update/${id}`, updateData);
-
-            toast.success("Студент успешно обновлён");
+            await updateStudent(id, formData);
             navigate("/");
-        } catch (error: any) {
-            console.error("Error updating student:", error);
-            toast.error(
-                error?.response?.data?.error ||
-                    error?.response?.data?.message ||
-                    "Ошибка обновления студента"
-            );
+        } catch (error) {
+            // Error already handled in data.ts
         } finally {
             setIsUpdating(false);
         }
@@ -231,7 +159,7 @@ const EditStudent = () => {
 
     if (loading) {
         return (
-            <div className="h-[80vh] w-full flex justify-center items-center ">
+            <div className="h-[80vh] w-full flex justify-center items-center">
                 <div className="w-[400px]">
                     <ProgressAuto
                         durationMs={500}
@@ -247,27 +175,22 @@ const EditStudent = () => {
 
     return (
         <div className="space-y-6 pb-10">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-semibold text-gray-900 ">
+            <div className="flex items-center gap-2 ">
+                    <Link to="/">
+                        <Button className="rounded-xl" size={"sm"}>
+                            <RiArrowGoBackLine className="w-6 h-6" />
+                        </Button>
+                    </Link>
+                    <h1 className="text-2xl font-semibold text-gray-900">
                         Редактировать -{" "}
                         <span className="text-maintx">{fullName}</span>
                     </h1>
                 </div>
             </div>
 
-            {/* Breadcrumb */}
-            {/* <CustomBreadcrumb
-                items={[
-                    { label: "Панель управления", href: "/" },
-                    { label: "Студенты", href: "/users" },
-                    { label: fullName || "Редактировать", isActive: true },
-                ]}
-            /> */}
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="bg-white  rounded-2xl shadow-lg border lg:col-span-2 border-gray-100 ">
+                <Card className="bg-white rounded-2xl shadow-lg border lg:col-span-2 border-gray-100">
                     <CardHeader></CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -276,7 +199,7 @@ const EditStudent = () => {
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="student_name"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Имя
                                         </Label>
@@ -291,14 +214,14 @@ const EditStudent = () => {
                                                     e.target.value
                                                 )
                                             }
-                                            className="h-12 rounded-xl border-gray-200 "
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="student_surname"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Фамилия
                                         </Label>
@@ -313,14 +236,14 @@ const EditStudent = () => {
                                                     e.target.value
                                                 )
                                             }
-                                            className="h-12 rounded-xl border-gray-200 "
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="student_fathername"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Отчество
                                         </Label>
@@ -335,14 +258,14 @@ const EditStudent = () => {
                                                     e.target.value
                                                 )
                                             }
-                                            className="h-12 rounded-xl border-gray-200 "
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="passport_series"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Серия паспорта
                                         </Label>
@@ -357,14 +280,14 @@ const EditStudent = () => {
                                                     e.target.value
                                                 )
                                             }
-                                            className="h-12 rounded-xl border-gray-200 "
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="date_of_birth"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Дата рождения
                                         </Label>
@@ -413,6 +336,31 @@ const EditStudent = () => {
 
                                     <div className="space-y-2">
                                         <CustomCombobox
+                                            label="Регион"
+                                            placeholder="Выберите регион"
+                                            value={formData.region_id}
+                                            onChange={(value) =>
+                                                handleInputChange(
+                                                    "region_id",
+                                                    value
+                                                )
+                                            }
+                                            options={regions
+                                                .filter(
+                                                    (region: any) =>
+                                                        region &&
+                                                        region.region_id &&
+                                                        region.region_name
+                                                )
+                                                .map((region: any) => ({
+                                                    value: region.region_id.toString(),
+                                                    label: region.region_name,
+                                                }))}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <CustomCombobox
                                             label="Район"
                                             placeholder={
                                                 formData.region_id
@@ -450,12 +398,11 @@ const EditStudent = () => {
                                     </div>
                                 </div>
 
-                                {/* Right Column */}
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="phone_number"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Номер телефона
                                         </Label>
@@ -470,14 +417,63 @@ const EditStudent = () => {
                                                     e.target.value
                                                 )
                                             }
-                                            className="h-12 rounded-xl border-gray-200 "
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="owner_additional_phone_number"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Дополнительный номер телефона
+                                            владельца
+                                        </Label>
+                                        <Input
+                                            id="owner_additional_phone_number"
+                                            type="tel"
+                                            placeholder="Владелец номера телефона"
+                                            value={
+                                                formData.owner_additional_phone_number
+                                            }
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "owner_additional_phone_number",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="additional_phone_number"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Дополнительный номер телефона
+                                        </Label>
+                                        <Input
+                                            id="additional_phone_number"
+                                            type="tel"
+                                            placeholder="+998901234567"
+                                            value={
+                                                formData.additional_phone_number
+                                            }
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "additional_phone_number",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="university_name"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Название университета
                                         </Label>
@@ -492,14 +488,14 @@ const EditStudent = () => {
                                                     e.target.value
                                                 )
                                             }
-                                            className="h-12 rounded-xl border-gray-200 "
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="course_level"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Курс
                                         </Label>
@@ -516,14 +512,14 @@ const EditStudent = () => {
                                                     e.target.value
                                                 )
                                             }
-                                            className="h-12 rounded-xl border-gray-200 "
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="university_group_name"
-                                            className="text-sm font-medium text-gray-700 "
+                                            className="text-sm font-medium text-gray-700"
                                         >
                                             Группа
                                         </Label>
@@ -540,7 +536,7 @@ const EditStudent = () => {
                                                     e.target.value
                                                 )
                                             }
-                                            className="h-12 rounded-xl border-gray-200 "
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
 
@@ -568,41 +564,15 @@ const EditStudent = () => {
                                             required
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <CustomCombobox
-                                            label="Регион"
-                                            placeholder="Выберите регион"
-                                            value={formData.region_id}
-                                            onChange={(value) =>
-                                                handleInputChange(
-                                                    "region_id",
-                                                    value
-                                                )
-                                            }
-                                            options={regions
-                                                .filter(
-                                                    (region: any) =>
-                                                        region &&
-                                                        region.region_id &&
-                                                        region.region_name
-                                                )
-                                                .map((region: any) => ({
-                                                    value: region.region_id.toString(),
-                                                    label: region.region_name,
-                                                }))}
-                                            required
-                                        />
-                                    </div>
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
                             <div className="flex justify-end space-x-4 pt-6">
-                                <Link to="/users">
+                                <Link to="/">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="px-6 py-2 h-12 rounded-xl border-gray-300  text-gray-700  hover:bg-gray-50 "
+                                        className="px-6 py-2 h-12 rounded-xl border-gray-300 text-gray-700 hover:bg-gray-50"
                                     >
                                         Назад
                                     </Button>
