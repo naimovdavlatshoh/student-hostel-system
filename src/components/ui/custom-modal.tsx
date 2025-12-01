@@ -157,6 +157,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
                 className={`${getSizeClass()} ${className}`}
                 style={getModalStyles()}
                 hideClose={!showCloseButton}
+                onOpenAutoFocus={(e) => e.preventDefault()}
             >
                 <DialogHeader>
                     <DialogTitle className="text-gray-900 ">

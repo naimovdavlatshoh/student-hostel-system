@@ -3,6 +3,12 @@ import { Link, useLocation } from "react-router-dom";
 import { IoIosArrowDown } from "react-icons/io";
 import { useEffect, useState } from "react";
 import { PiStudentFill } from "react-icons/pi";
+import { PiBuildings } from "react-icons/pi";
+import { MdOutlineMeetingRoom } from "react-icons/md";
+import { RiHotelBedLine } from "react-icons/ri";
+
+
+
 
 interface SidebarProps {
     className?: string;
@@ -14,7 +20,21 @@ const navigation = [
         href: "/",
         icon: <PiStudentFill className="w-5 h-5" />,
     },
-
+    {
+        name: "Этажи",
+        href: "/floors",
+        icon: <PiBuildings className="w-5 h-5" />,
+    },
+    {
+        name: "Комнаты",
+        href: "/rooms",
+        icon: <MdOutlineMeetingRoom className="w-5 h-5" />,
+    },
+    {
+        name: "Койки",
+        href: "/beds",
+        icon: <RiHotelBedLine className="w-5 h-5" />,
+    },
 ];
 
 const Sidebar = ({ className }: SidebarProps) => {

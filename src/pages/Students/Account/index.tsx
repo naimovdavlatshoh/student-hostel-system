@@ -24,6 +24,7 @@ import {
 } from "./data";
 import { RiArrowGoBackLine } from "react-icons/ri";
 import { BASE_URL } from "@/services/data";
+import { formatDateTime } from "@/utils/formatters";
 
 const Account = () => {
     const { id } = useParams();
@@ -278,6 +279,14 @@ const Account = () => {
                                     {student.available_in_terminal === 1
                                         ? "загружено"
                                         : "Не загружено"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">
+                                    Дата регистрации
+                                </span>
+                                <span className="text-gray-900 font-medium">
+                                    {formatDateTime(student.created_at)}
                                 </span>
                             </div>
                         </CardContent>

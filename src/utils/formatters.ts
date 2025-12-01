@@ -92,3 +92,34 @@ export const formatDecimal = (value: string, decimals: number = 2): string => {
     const formatted = num.toFixed(decimals);
     return formatNumber(formatted);
 };
+
+/**
+ * Formats a date-time string to dd-mm-yy, hh-mm format
+ * @param dateString - The date-time string to format (e.g., "2025-12-01 14:25:09")
+ * @returns Formatted date-time string (e.g., "01-12-25, 14-25")
+ *
+ * @example
+ * formatDateTime("2025-12-01 14:25:09") // "01-12-25, 14-25"
+ * formatDateTime("2025-03-15 09:30:00") // "15-03-25, 09-30"
+ */
+export const formatDateTime = (dateString: string): string => {
+    if (!dateString) return "—";
+
+    try {
+        const date = new Date(dateString);
+
+        // Check if date is valid
+        if (isNaN(date.getTime())) return "—";
+
+        const day = date.getDate().toString().padStart(2, "0");
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const year = date.getFullYear().toString().slice(-2); // Last 2 digits
+        const hours = date.getHours().toString().padStart(2, "0");
+        const minutes = date.getMinutes().toString().padStart(2, "0");
+
+        return `${day}-${month}-${year}, ${hours}:${minutes}`;
+    } catch (error) {
+        console.error("Error formatting date:", error);
+        return "—";
+    }
+};

@@ -20,7 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -52,7 +52,7 @@ const Students = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+    // const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
     const [activeTab, setActiveTab] = useState<string>("all");
     const [counts, setCounts] = useState<Counts>({
         all: 0,
@@ -165,21 +165,21 @@ const Students = () => {
         }, 100);
     };
 
-    const handleSelectUser = (studentId: number) => {
-        setSelectedUsers((prev) =>
-            prev.includes(studentId)
-                ? prev.filter((id) => id !== studentId)
-                : [...prev, studentId]
-        );
-    };
+    // const handleSelectUser = (studentId: number) => {
+    //     setSelectedUsers((prev) =>
+    //         prev.includes(studentId)
+    //             ? prev.filter((id) => id !== studentId)
+    //             : [...prev, studentId]
+    //     );
+    // };
 
-    const handleSelectAll = () => {
-        if (selectedUsers?.length === students?.length) {
-            setSelectedUsers([]);
-        } else {
-            setSelectedUsers(students?.map((student) => student.student_id));
-        }
-    };
+    // const handleSelectAll = () => {
+    //     if (selectedUsers?.length === students?.length) {
+    //         setSelectedUsers([]);
+    //     } else {
+    //         setSelectedUsers(students?.map((student) => student.student_id));
+    //     }
+    // };
 
     const openDeleteModal = (user: { id: number; name: string }) => {
         setUserToDelete({ id: user.id, name: user.name });
@@ -271,7 +271,7 @@ const Students = () => {
 
     return (
         <div className="space-y-6">
-            <div className="space-y-4 mb-10">
+            <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold text-gray-900">
@@ -338,7 +338,7 @@ const Students = () => {
                     <Table className="table-auto w-full">
                         <TableHeader className="bg-mainbg/10">
                             <TableRow>
-                                <TableHead className="text-maintx">
+                                {/* <TableHead className="text-maintx">
                                     <Checkbox
                                         checked={
                                             selectedUsers?.length ===
@@ -347,6 +347,9 @@ const Students = () => {
                                         }
                                         onCheckedChange={handleSelectAll}
                                     />
+                                </TableHead> */}
+                                <TableHead className="text-maintx break-words whitespace-normal min-w-0 max-w-xs">
+                                    #
                                 </TableHead>
                                 <TableHead className="text-maintx break-words whitespace-normal min-w-0 max-w-xs">
                                     Студент
@@ -412,12 +415,12 @@ const Students = () => {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                currentStudents?.map((student) => (
+                                currentStudents?.map((student,idx) => (
                                     <TableRow
                                         key={student.student_id}
                                         className="border-dashed border-gray-200 hover:bg-gray-100"
                                     >
-                                        <TableCell className="w-12">
+                                        {/* <TableCell className="w-12">
                                             <Checkbox
                                                 checked={selectedUsers.includes(
                                                     student.student_id
@@ -428,6 +431,9 @@ const Students = () => {
                                                     )
                                                 }
                                             />
+                                        </TableCell> */}
+                                        <TableCell className="text-gray-600 break-words whitespace-normal min-w-0 max-w-xs">
+                                            {idx+1}
                                         </TableCell>
                                         <TableCell className="text-gray-600 break-words whitespace-normal min-w-0 max-w-xs">
                                             <div className="flex items-center space-x-3">

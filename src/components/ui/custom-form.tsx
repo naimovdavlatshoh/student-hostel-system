@@ -85,11 +85,13 @@ export const CustomCombobox: React.FC<CustomComboboxProps> = ({
     const selectedOption = options.find((option) => option.value === value);
 
     return (
-        <div className={`space-y-2 ${className}`}>
-            <label className="text-sm font-medium text-gray-900 ">
-                {label}
-                {required && <span className="text-red-500 ml-1">*</span>}
-            </label>
+        <div className={`${label !== "" && "space-y-2"} ${className}`}>
+            {label !== "" && (
+                <label className="text-sm font-medium text-gray-900 ">
+                    {label}
+                    {required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+            )}
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button

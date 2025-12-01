@@ -7,6 +7,9 @@ import Login from "../pages/Auth/Login";
 import Account from "@/pages/Students/Account";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import EditStudent from "@/pages/Students/EditStudent";
+import FloorsPage from "@/pages/Floors/Floors";
+import RoomsPage from "@/pages/Rooms/Rooms";
+import BedsPage from "@/pages/Beds/Beds";
 
 const router = createBrowserRouter([
     {
@@ -38,6 +41,18 @@ const router = createBrowserRouter([
             {
                 path: "details/:id",
                 element: <Account />,
+            },
+            {
+                path: "floors",
+                element: <FloorsPage />,
+            },
+            {
+                path: "rooms",
+                element: <RoomsPage />,
+            },
+            {
+                path: "beds",
+                element: <BedsPage />,
             },
         ],
     },
