@@ -70,6 +70,7 @@ interface CustomComboboxProps {
     required?: boolean;
     className?: string;
     onSearchChange?: (value: string) => void;
+    onOpenReset?: () => void;
 }
 
 export const CustomCombobox: React.FC<CustomComboboxProps> = ({
@@ -81,6 +82,7 @@ export const CustomCombobox: React.FC<CustomComboboxProps> = ({
     required = false,
     className = "",
     onSearchChange,
+    onOpenReset,
 }) => {
     const [open, setOpen] = useState(false);
 
@@ -94,7 +96,15 @@ export const CustomCombobox: React.FC<CustomComboboxProps> = ({
                     {required && <span className="text-red-500 ml-1">*</span>}
                 </label>
             )}
-            <Popover open={open} onOpenChange={setOpen}>
+            <Popover
+                open={open}
+                onOpenChange={(isOpen) => {
+                    setOpen(isOpen);
+                    if (isOpen && onOpenReset) {
+                        onOpenReset();
+                    }
+                }}
+            >
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"
@@ -118,12 +128,18 @@ export const CustomCombobox: React.FC<CustomComboboxProps> = ({
                                 {options.map((option) => (
                                     <CommandItem
                                         key={option.value}
-                                        value={option.value}
+                                        value={option.label}
                                         onSelect={(currentValue) => {
+                                            const selected = options.find(
+                                                (opt) =>
+                                                    opt.label === currentValue
+                                            );
+                                            const newValue =
+                                                selected?.value || "";
                                             onChange(
-                                                currentValue === value
+                                                newValue === value
                                                     ? ""
-                                                    : currentValue
+                                                    : newValue
                                             );
                                             setOpen(false);
                                         }}

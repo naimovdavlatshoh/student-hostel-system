@@ -89,13 +89,25 @@ const CreateContractPage: React.FC = () => {
     };
 
     const handleStudentSearchChange = async (value: string) => {
-        if (value.length < 3) {
-            return;
-        }
         try {
             setStudentsLoading(true);
-            const results = await searchStudents(value, "all");
-            setStudents(results);
+            if (!value || value.length < 3) {
+                const { students } = await fetchStudents(1, 100);
+                setStudents(students);
+            } else {
+                const results = await searchStudents(value, "all");
+                setStudents(results);
+            }
+        } finally {
+            setStudentsLoading(false);
+        }
+    };
+
+    const handleStudentComboboxOpen = async () => {
+        try {
+            setStudentsLoading(true);
+            const { students } = await fetchStudents(1, 100);
+            setStudents(students);
         } finally {
             setStudentsLoading(false);
         }
@@ -208,6 +220,7 @@ const CreateContractPage: React.FC = () => {
                                     }
                                     options={studentOptions}
                                     onSearchChange={handleStudentSearchChange}
+                                    onOpenReset={handleStudentComboboxOpen}
                                     required
                                 />
                             </div>

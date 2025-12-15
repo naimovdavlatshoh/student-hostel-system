@@ -18,6 +18,8 @@ export interface Contract {
     payment_status: number;
     payment_status_text: string;
     created_at: string;
+    is_terminated: number;
+    is_terminated_text?: string;
 }
 
 export interface ContractsApiResponse {

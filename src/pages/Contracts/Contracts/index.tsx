@@ -420,8 +420,18 @@ const ContractsPage: React.FC = () => {
                                                             </span>
                                                         </DropdownMenuItem>
                                                     </Link>
-                                                    {activeTab !==
-                                                        "terminated" && (
+                                                    {contract.is_terminated ===
+                                                    1 ? (
+                                                        <DropdownMenuItem
+                                                            disabled
+                                                            className="flex items-center gap-2 text-orange-400 cursor-not-allowed"
+                                                        >
+                                                            <MdOutlineCancel className="w-4 h-4" />
+                                                            <span>
+                                                                Расторгнутый
+                                                            </span>
+                                                        </DropdownMenuItem>
+                                                    ) : (
                                                         <>
                                                             <Link
                                                                 to={`/contracts/${contract.contract_id}/edit`}
