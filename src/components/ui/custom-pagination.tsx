@@ -1,13 +1,6 @@
 import React from "react";
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CustomPaginationProps {
     currentPage: number;
@@ -42,75 +35,101 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
         return null;
     }
 
+    const getPageNumbers = () => {
+        const pages: (number | string)[] = [];
+
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else if (currentPage <= 3) {
+            for (let i = 1; i <= 5; i++) {
+                pages.push(i);
+            }
+            if (totalPages > 5) {
+                pages.push("ellipsis");
+                pages.push(totalPages);
+            }
+        } else if (currentPage >= totalPages - 2) {
+            pages.push(1);
+            pages.push("ellipsis");
+            for (let i = totalPages - 4; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            pages.push(1);
+            pages.push("ellipsis");
+            for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                pages.push(i);
+            }
+            pages.push("ellipsis");
+            pages.push(totalPages);
+        }
+
+        return pages;
+    };
+
     return (
-        <div className={`flex justify-center ${className}`}>
-            <Pagination>
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious
-                            href="#"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handlePrevious();
-                            }}
-                            className={
-                                currentPage === 1
-                                    ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer"
-                            }
-                        />
-                    </PaginationItem>
+        <div className={cn("flex items-center gap-1", className)}>
+            <button
+                onClick={handlePrevious}
+                disabled={currentPage === 1}
+                className={cn(
+                    "h-8 w-8 flex items-center justify-center rounded-full transition-all duration-200",
+                    "hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                    "focus:outline-none focus:ring-2 focus:ring-gray-300"
+                )}
+                aria-label="Previous page"
+            >
+                <ChevronLeft className="h-4 w-4" />
+            </button>
 
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNumber;
-                        if (totalPages <= 5) {
-                            pageNumber = i + 1;
-                        } else if (currentPage <= 3) {
-                            pageNumber = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                            pageNumber = totalPages - 4 + i;
-                        } else {
-                            pageNumber = currentPage - 2 + i;
-                        }
+            {getPageNumbers().map((page, index) => {
+                if (page === "ellipsis") {
+                    return (
+                        <div
+                            key={`ellipsis-${index}`}
+                            className="h-8 w-8 flex items-center justify-center"
+                        >
+                            <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                        </div>
+                    );
+                }
 
-                        return (
-                            <PaginationItem key={pageNumber}>
-                                <PaginationLink
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        handlePageClick(pageNumber);
-                                    }}
-                                    isActive={currentPage === pageNumber}
-                                >
-                                    {pageNumber}
-                                </PaginationLink>
-                            </PaginationItem>
-                        );
-                    })}
+                const pageNumber = page as number;
+                const isActive = currentPage === pageNumber;
 
-                    {totalPages > 5 && currentPage < totalPages - 2 && (
-                        <PaginationItem>
-                            <PaginationEllipsis />
-                        </PaginationItem>
-                    )}
+                return (
+                    <button
+                        key={pageNumber}
+                        onClick={() => handlePageClick(pageNumber)}
+                        className={cn(
+                            "h-8 w-8 flex items-center justify-center rounded-full text-sm font-medium transition-all duration-200",
+                            "focus:outline-none focus:ring-2 focus:ring-gray-300",
+                            isActive
+                                ? "bg-mainbg/15 text-maintx"
+                                : "hover:bg-gray-200 text-gray-700"
+                        )}
+                        aria-label={`Page ${pageNumber}`}
+                        aria-current={isActive ? "page" : undefined}
+                    >
+                        {pageNumber}
+                    </button>
+                );
+            })}
 
-                    <PaginationItem>
-                        <PaginationNext
-                            href="#"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleNext();
-                            }}
-                            className={
-                                currentPage === totalPages
-                                    ? "pointer-events-none opacity-50"
-                                    : "cursor-pointer"
-                            }
-                        />
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
+            <button
+                onClick={handleNext}
+                disabled={currentPage === totalPages}
+                className={cn(
+                    "h-8 w-8 flex items-center justify-center rounded-full transition-all duration-200",
+                    "hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                    "focus:outline-none focus:ring-2 focus:ring-gray-300"
+                )}
+                aria-label="Next page"
+            >
+                <ChevronRight className="h-4 w-4" />
+            </button>
         </div>
     );
 };

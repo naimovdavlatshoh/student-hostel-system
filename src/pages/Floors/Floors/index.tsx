@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardFooter,
+} from "@/components/ui/card";
 import {
     Table,
     TableBody,
@@ -8,6 +13,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import CustomPagination from "@/components/ui/custom-pagination";
 import { Button } from "@/components/ui/button";
@@ -30,6 +42,7 @@ const FloorsPage: React.FC = () => {
     const [floors, setFloors] = useState<Floor[]>([]);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
+    const [itemsPerPage, setItemsPerPage] = useState<number>(10);
     const [loading, setLoading] = useState<boolean>(false);
     const [editFloorId, setEditFloorId] = useState<number | null>(null);
     const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
@@ -39,10 +52,10 @@ const FloorsPage: React.FC = () => {
         number: number;
     } | null>(null);
 
-    const loadFloors = async (page: number) => {
+    const loadFloors = async (page: number, limit: number) => {
         try {
             setLoading(true);
-            const { floors, totalPages } = await fetchFloors(page, 10);
+            const { floors, totalPages } = await fetchFloors(page, limit);
             setFloors(floors);
             setTotalPages(totalPages || 1);
         } catch (error) {
@@ -53,8 +66,8 @@ const FloorsPage: React.FC = () => {
     };
 
     useEffect(() => {
-        loadFloors(currentPage);
-    }, [currentPage]);
+        loadFloors(currentPage, itemsPerPage);
+    }, [currentPage, itemsPerPage]);
 
     const handlePageChange = (page: number) => {
         if (page !== currentPage) {
@@ -62,8 +75,14 @@ const FloorsPage: React.FC = () => {
         }
     };
 
+    const handleItemsPerPageChange = (value: string) => {
+        const newLimit = Number(value);
+        setItemsPerPage(newLimit);
+        setCurrentPage(1);
+    };
+
     const handleFloorCreated = () => {
-        loadFloors(currentPage);
+        loadFloors(currentPage, itemsPerPage);
     };
 
     const handleOpenEdit = (floorId: number) => {
@@ -77,7 +96,7 @@ const FloorsPage: React.FC = () => {
     };
 
     const handleFloorUpdated = () => {
-        loadFloors(currentPage);
+        loadFloors(currentPage, itemsPerPage);
     };
 
     const openDeleteModal = (floor: { id: number; number: number }) => {
@@ -91,7 +110,7 @@ const FloorsPage: React.FC = () => {
         try {
             await deleteFloor(floorToDelete.id);
             setLoading(true);
-            await loadFloors(currentPage);
+            await loadFloors(currentPage, itemsPerPage);
             setIsDeleteOpen(false);
             setFloorToDelete(null);
         } catch (error) {
@@ -170,7 +189,7 @@ const FloorsPage: React.FC = () => {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                floors.map((floor,idx) => (
+                                floors.map((floor, idx) => (
                                     <TableRow
                                         key={floor.floor_id}
                                         className="border-dashed border-gray-200 hover:bg-gray-50"
@@ -179,7 +198,7 @@ const FloorsPage: React.FC = () => {
                                             {floor.floor_number}
                                         </TableCell>
                                         <TableCell className="text-gray-700 font-medium text-center">
-                                            {idx+1}
+                                            {idx + 1}
                                         </TableCell>
                                         <TableCell className="text-center flex justify-center items-center">
                                             <Badge
@@ -242,14 +261,33 @@ const FloorsPage: React.FC = () => {
                         </TableBody>
                     </Table>
                 </CardContent>
+                <CardFooter className="flex justify-between items-center border-t border-gray-200 pt-4">
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="" className="text-gray-500 text-sm">
+                            Строк на странице:
+                        </label>
+                        <Select
+                            value={itemsPerPage.toString()}
+                            onValueChange={handleItemsPerPageChange}
+                        >
+                            <SelectTrigger className="w-16 h-8 border-none">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="5">5</SelectItem>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="20">20</SelectItem>
+                                <SelectItem value="30">30</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <CustomPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </CardFooter>
             </Card>
-
-            <CustomPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                className="mt-4"
-            />
 
             <EditFloorModal
                 floorId={editFloorId}

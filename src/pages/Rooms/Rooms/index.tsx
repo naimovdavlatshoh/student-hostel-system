@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardFooter,
+} from "@/components/ui/card";
 import {
     Table,
     TableBody,
@@ -8,6 +13,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import CustomPagination from "@/components/ui/custom-pagination";
 import { Button } from "@/components/ui/button";
@@ -31,6 +43,7 @@ const RoomsPage: React.FC = () => {
     const [rooms, setRooms] = useState<Room[]>([]);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
+    const [itemsPerPage, setItemsPerPage] = useState<number>(10);
     const [loading, setLoading] = useState<boolean>(false);
     const [selectedFloorId, setSelectedFloorId] = useState<number | undefined>(
         undefined
@@ -52,10 +65,14 @@ const RoomsPage: React.FC = () => {
         loadFloors();
     }, []);
 
-    const loadRooms = async (page: number, floorId?: number) => {
+    const loadRooms = async (page: number, limit: number, floorId?: number) => {
         try {
             setLoading(true);
-            const { rooms, totalPages } = await fetchRooms(page, 10, floorId);
+            const { rooms, totalPages } = await fetchRooms(
+                page,
+                limit,
+                floorId
+            );
             setRooms(rooms);
             setTotalPages(totalPages || 1);
         } catch (error) {
@@ -66,13 +83,19 @@ const RoomsPage: React.FC = () => {
     };
 
     useEffect(() => {
-        loadRooms(currentPage, selectedFloorId);
-    }, [currentPage, selectedFloorId]);
+        loadRooms(currentPage, itemsPerPage, selectedFloorId);
+    }, [currentPage, itemsPerPage, selectedFloorId]);
 
     const handlePageChange = (page: number) => {
         if (page !== currentPage) {
             setCurrentPage(page);
         }
+    };
+
+    const handleItemsPerPageChange = (value: string) => {
+        const newLimit = Number(value);
+        setItemsPerPage(newLimit);
+        setCurrentPage(1);
     };
 
     const handleFloorChange = (value: string) => {
@@ -90,7 +113,7 @@ const RoomsPage: React.FC = () => {
     ];
 
     const handleRoomCreated = () => {
-        loadRooms(currentPage, selectedFloorId);
+        loadRooms(currentPage, itemsPerPage, selectedFloorId);
     };
 
     const handleOpenEdit = (roomId: number) => {
@@ -104,7 +127,7 @@ const RoomsPage: React.FC = () => {
     };
 
     const handleRoomUpdated = () => {
-        loadRooms(currentPage, selectedFloorId);
+        loadRooms(currentPage, itemsPerPage, selectedFloorId);
     };
 
     const openDeleteModal = (room: { id: number; number: number }) => {
@@ -118,7 +141,7 @@ const RoomsPage: React.FC = () => {
         try {
             await deleteRoom(roomToDelete.id);
             setLoading(true);
-            await loadRooms(currentPage, selectedFloorId);
+            await loadRooms(currentPage, itemsPerPage, selectedFloorId);
             setIsDeleteOpen(false);
             setRoomToDelete(null);
         } catch (error) {
@@ -288,14 +311,33 @@ const RoomsPage: React.FC = () => {
                         </TableBody>
                     </Table>
                 </CardContent>
+                <CardFooter className="flex justify-between items-center border-t border-gray-200 pt-4">
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="" className="text-gray-500 text-sm">
+                            Строк на странице:
+                        </label>
+                        <Select
+                            value={itemsPerPage.toString()}
+                            onValueChange={handleItemsPerPageChange}
+                        >
+                            <SelectTrigger className="w-16 h-8 border-none">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="5">5</SelectItem>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="20">20</SelectItem>
+                                <SelectItem value="30">30</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <CustomPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </CardFooter>
             </Card>
-
-            <CustomPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                className="mt-4"
-            />
 
             <EditRoomModal
                 roomId={editRoomId}

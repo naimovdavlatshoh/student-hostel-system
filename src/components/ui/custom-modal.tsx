@@ -131,7 +131,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
         if (onConfirm) {
             setIsLoading(true);
             try {
-                await onConfirm();
+            await onConfirm();
             } finally {
                 setIsLoading(false);
             }

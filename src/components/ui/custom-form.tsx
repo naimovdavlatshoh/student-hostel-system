@@ -69,6 +69,7 @@ interface CustomComboboxProps {
     options: ComboboxOption[];
     required?: boolean;
     className?: string;
+    onSearchChange?: (value: string) => void;
 }
 
 export const CustomCombobox: React.FC<CustomComboboxProps> = ({
@@ -79,6 +80,7 @@ export const CustomCombobox: React.FC<CustomComboboxProps> = ({
     options,
     required = false,
     className = "",
+    onSearchChange,
 }) => {
     const [open, setOpen] = useState(false);
 
@@ -106,7 +108,10 @@ export const CustomCombobox: React.FC<CustomComboboxProps> = ({
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl">
                     <Command className="rounded-xl">
-                        <CommandInput placeholder="Search..." />
+                        <CommandInput
+                            placeholder="Search..."
+                            onValueChange={onSearchChange}
+                        />
                         <CommandList>
                             <CommandEmpty>No option found.</CommandEmpty>
                             <CommandGroup>

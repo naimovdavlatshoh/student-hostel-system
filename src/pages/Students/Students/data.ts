@@ -1,4 +1,9 @@
-import { GetDataSimple, DeleteData, PostDataTokenJson } from "@/services/data";
+import {
+    GetDataSimple,
+    DeleteData,
+    PostDataTokenJson,
+    PostSimple,
+} from "@/services/data";
 import { toast } from "sonner";
 
 export interface Student {
@@ -7,6 +12,7 @@ export interface Student {
     student_name: string;
     student_surname: string;
     student_fathername: string;
+    student_image_url: string;
     passport_series: string;
     date_of_birth: string;
     region_id: number;
@@ -97,11 +103,11 @@ export const searchStudents = async (
         }
 
         const encodedKeyword = encodeURIComponent(keyword);
-        const response = await GetDataSimple(
+        const response = await PostSimple(
             `api/student/search?keyword=${encodedKeyword}`
         );
 
-        let filteredResults = response?.result || response || [];
+        let filteredResults = (response as any)?.result || [];
         if (activeTab === "active") {
             filteredResults = filteredResults.filter(
                 (student: Student) => student.is_blocked === 0

@@ -6,9 +6,8 @@ import { PiStudentFill } from "react-icons/pi";
 import { PiBuildings } from "react-icons/pi";
 import { MdOutlineMeetingRoom } from "react-icons/md";
 import { RiHotelBedLine } from "react-icons/ri";
-
-
-
+import { HiOutlineViewGrid } from "react-icons/hi";
+import { RiFileList2Line } from "react-icons/ri";
 
 interface SidebarProps {
     className?: string;
@@ -34,6 +33,16 @@ const navigation = [
         name: "Койки",
         href: "/beds",
         icon: <RiHotelBedLine className="w-5 h-5" />,
+    },
+    {
+        name: "Контракты",
+        href: "/contracts",
+        icon: <RiFileList2Line className="w-5 h-5" />,
+    },
+    {
+        name: "Планировка",
+        href: "/floor-plan",
+        icon: <HiOutlineViewGrid className="w-5 h-5" />,
     },
 ];
 

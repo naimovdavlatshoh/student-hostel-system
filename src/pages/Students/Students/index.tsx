@@ -415,7 +415,7 @@ const Students = () => {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                currentStudents?.map((student,idx) => (
+                                currentStudents?.map((student, idx) => (
                                     <TableRow
                                         key={student.student_id}
                                         className="border-dashed border-gray-200 hover:bg-gray-100"
@@ -433,15 +433,15 @@ const Students = () => {
                                             />
                                         </TableCell> */}
                                         <TableCell className="text-gray-600 break-words whitespace-normal min-w-0 max-w-xs">
-                                            {idx+1}
+                                            {idx + 1}
                                         </TableCell>
                                         <TableCell className="text-gray-600 break-words whitespace-normal min-w-0 max-w-xs">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-maintx flex-shrink-0">
                                                     <img
                                                         src={
-                                                            student?.document_full_path
-                                                                ? student?.document_full_path
+                                                            student?.student_image_url
+                                                                ? student?.student_image_url
                                                                 : "/avatar-1.webp"
                                                         }
                                                         alt={""}

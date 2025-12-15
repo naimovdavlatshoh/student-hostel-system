@@ -10,6 +10,11 @@ import EditStudent from "@/pages/Students/EditStudent";
 import FloorsPage from "@/pages/Floors/Floors";
 import RoomsPage from "@/pages/Rooms/Rooms";
 import BedsPage from "@/pages/Beds/Beds";
+import FloorPlanPage from "@/pages/FloorPlan/FloorPlan";
+import CreateContractPage from "@/pages/Contracts/CreateContract";
+import ContractsPage from "@/pages/Contracts/Contracts";
+import ContractDetailsPage from "@/pages/Contracts/ContractDetails";
+import UpdateContractPage from "@/pages/Contracts/UpdateContract";
 
 const router = createBrowserRouter([
     {
@@ -54,7 +59,31 @@ const router = createBrowserRouter([
                 path: "beds",
                 element: <BedsPage />,
             },
+            {
+                path: "contracts",
+                element: <ContractsPage />,
+            },
+            {
+                path: "contracts/:id",
+                element: <ContractDetailsPage />,
+            },
+            {
+                path: "contracts/create",
+                element: <CreateContractPage />,
+            },
+            {
+                path: "contracts/:id/edit",
+                element: <UpdateContractPage />,
+            },
         ],
+    },
+    {
+        path: "/floor-plan",
+        element: (
+            <ProtectedRoute>
+                <FloorPlanPage />
+            </ProtectedRoute>
+        ),
     },
 ]);
 
