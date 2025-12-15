@@ -75,6 +75,11 @@ const Students = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [loading, setLoading] = useState(true);
     const searchTimeoutRef = useRef<number | null>(null);
+    const [isImageOpen, setIsImageOpen] = useState(false);
+    const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(
+        null
+    );
+    const [selectedImageTitle, setSelectedImageTitle] = useState<string>("");
 
     const loadStudents = async (
         page: number,
@@ -269,6 +274,14 @@ const Students = () => {
 
     const currentStudents = students;
 
+    const openImageModal = (student: Student) => {
+        setSelectedImageUrl(student.student_image_url || "/avatar-1.webp");
+        setSelectedImageTitle(
+            `${student.student_surname} ${student.student_name} ${student.student_fathername}`.trim()
+        );
+        setIsImageOpen(true);
+    };
+
     return (
         <div className="space-y-6">
             <div className="space-y-4">
@@ -437,7 +450,12 @@ const Students = () => {
                                         </TableCell>
                                         <TableCell className="text-gray-600 break-words whitespace-normal min-w-0 max-w-xs">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-maintx flex-shrink-0">
+                                                <div
+                                                    className="w-12 h-12 rounded-full overflow-hidden border-2 border-maintx flex-shrink-0 cursor-pointer"
+                                                    onClick={() =>
+                                                        openImageModal(student)
+                                                    }
+                                                >
                                                     <img
                                                         src={
                                                             student?.student_image_url
@@ -627,6 +645,25 @@ const Students = () => {
                         </span>
                         ?
                     </p>
+                </div>
+            </CustomModal>
+
+            <CustomModal
+                showTrigger={false}
+                open={isImageOpen}
+                onOpenChange={setIsImageOpen}
+                title={selectedImageTitle || "Фото студента"}
+                showFooter={false}
+                size="sm"
+            >
+                <div className="flex items-center justify-center py-4">
+                    <div className="w-60 h-60 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                        <img
+                            src={selectedImageUrl || "/avatar-1.webp"}
+                            alt={selectedImageTitle}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
                 </div>
             </CustomModal>
         </div>

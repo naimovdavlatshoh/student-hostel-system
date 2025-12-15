@@ -48,6 +48,7 @@ interface CustomModalProps {
     maxWidth?: string;
     maxHeight?: string;
     className?: string;
+    unstyled?: boolean;
 }
 
 const CustomModal: React.FC<CustomModalProps> = ({
@@ -76,6 +77,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
     maxWidth,
     maxHeight,
     className = "",
+    unstyled = false,
 }) => {
     // Support controlled and uncontrolled modes
     const [internalOpen, setInternalOpen] = useState(false);
@@ -131,7 +133,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
         if (onConfirm) {
             setIsLoading(true);
             try {
-            await onConfirm();
+                await onConfirm();
             } finally {
                 setIsLoading(false);
             }
@@ -154,20 +156,24 @@ const CustomModal: React.FC<CustomModalProps> = ({
                 </DialogTrigger>
             )}
             <DialogContent
-                className={`${getSizeClass()} ${className}`}
+                className={`${getSizeClass()} ${className} ${
+                    unstyled ? "bg-transparent shadow-none border-0 p-0" : ""
+                }`}
                 style={getModalStyles()}
                 hideClose={!showCloseButton}
                 onOpenAutoFocus={(e) => e.preventDefault()}
             >
-                <DialogHeader>
-                    <DialogTitle className="text-gray-900 ">
-                        {title}
-                    </DialogTitle>
-                </DialogHeader>
+                {!unstyled && (
+                    <DialogHeader>
+                        <DialogTitle className="text-gray-900 ">
+                            {title}
+                        </DialogTitle>
+                    </DialogHeader>
+                )}
 
-                <div className="py-4">{children}</div>
+                <div className={unstyled ? "" : "py-4"}>{children}</div>
 
-                {showFooter && (
+                {showFooter && !unstyled && (
                     <DialogFooter>
                         {footerContent || (
                             <>
