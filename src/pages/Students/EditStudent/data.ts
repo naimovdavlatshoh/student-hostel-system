@@ -18,6 +18,10 @@ export interface EditFormData {
     university_name: string;
     course_level: string;
     university_group_name: string;
+    form_of_education: string;
+    study_period: string;
+    faculty: string;
+    field_of_study: string;
     is_blocked: string;
 }
 
@@ -35,6 +39,10 @@ export interface StudentData {
     university_name: string;
     course_level: number;
     university_group_name: string | null;
+    form_of_education: number | null;
+    study_period: number | null;
+    faculty: string | null;
+    field_of_study: string | null;
     is_blocked: number;
 }
 
@@ -163,6 +171,14 @@ export const updateStudent = async (
             course_level: parseInt(formData.course_level),
             university_group_name:
                 formData.university_group_name.trim() || null,
+            form_of_education: formData.form_of_education
+                ? parseInt(formData.form_of_education)
+                : null,
+            study_period: formData.study_period
+                ? parseInt(formData.study_period)
+                : null,
+            faculty: formData.faculty.trim() || null,
+            field_of_study: formData.field_of_study.trim() || null,
             is_blocked: parseInt(formData.is_blocked),
         };
 

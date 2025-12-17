@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomCombobox } from "@/components/ui/custom-form";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { MdCameraAlt } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { ProgressAuto } from "@/components/ui/progress";
@@ -43,6 +50,11 @@ const CreateStudent = () => {
         additional_phone_number: "",
         university_name: "",
         course_level: "",
+        university_group_name: "",
+        form_of_education: "",
+        study_period: "",
+        faculty: "",
+        field_of_study: "",
         passport_copy: null,
         student_photo: null,
     });
@@ -125,6 +137,11 @@ const CreateStudent = () => {
             setFormData((prev) => ({
                 ...prev,
                 student_photo: file,
+                university_group_name: prev.university_group_name || "",
+                form_of_education: prev.form_of_education || "",
+                study_period: prev.study_period || "",
+                faculty: prev.faculty || "",
+                field_of_study: prev.field_of_study || "",
             }));
         } catch (error: any) {
             console.error("Error uploading image:", error);
@@ -180,6 +197,11 @@ const CreateStudent = () => {
                 additional_phone_number: "",
                 university_name: "",
                 course_level: "",
+                university_group_name: "",
+                form_of_education: "",
+                study_period: "",
+                faculty: "",
+                field_of_study: "",
                 passport_copy: null,
                 student_photo: null,
             });
@@ -338,6 +360,48 @@ const CreateStudent = () => {
                                 <span className="text-gray-500">Курс</span>
                                 <span className="text-gray-900 font-medium">
                                     {formData.course_level || "—"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">Группа</span>
+                                <span className="text-gray-900 font-medium">
+                                    {formData.university_group_name || "—"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">
+                                    Форма обучения
+                                </span>
+                                <span className="text-gray-900 font-medium">
+                                    {formData.form_of_education === "1"
+                                        ? "Дневной"
+                                        : formData.form_of_education === "2"
+                                        ? "Ночной"
+                                        : "—"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">
+                                    Срок обучения
+                                </span>
+                                <span className="text-gray-900 font-medium">
+                                    {formData.study_period
+                                        ? `${formData.study_period} лет`
+                                        : "—"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">Факультет</span>
+                                <span className="text-gray-900 font-medium">
+                                    {formData.faculty || "—"}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500">
+                                    Направление
+                                </span>
+                                <span className="text-gray-900 font-medium">
+                                    {formData.field_of_study || "—"}
                                 </span>
                             </div>
                         </CardContent>
@@ -523,9 +587,42 @@ const CreateStudent = () => {
                                                 }))}
                                         />
                                     </div>
-                                </div>
-
-                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <CustomCombobox
+                                            label="Район"
+                                            placeholder={
+                                                formData.region_id
+                                                    ? "Выберите район"
+                                                    : "Сначала выберите регион"
+                                            }
+                                            value={formData.district_id}
+                                            onChange={(value) =>
+                                                handleInputChange(
+                                                    "district_id",
+                                                    value
+                                                )
+                                            }
+                                            options={
+                                                formData.region_id
+                                                    ? districts
+                                                          .filter(
+                                                              (district: any) =>
+                                                                  district &&
+                                                                  district.district_id &&
+                                                                  district.district_name
+                                                          )
+                                                          .map(
+                                                              (
+                                                                  district: any
+                                                              ) => ({
+                                                                  value: district.district_id.toString(),
+                                                                  label: district.district_name,
+                                                              })
+                                                          )
+                                                    : []
+                                            }
+                                        />
+                                    </div>
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="phone_number"
@@ -572,7 +669,9 @@ const CreateStudent = () => {
                                             className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
+                                </div>
 
+                                <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="additional_phone_number"
@@ -642,43 +741,133 @@ const CreateStudent = () => {
                                             className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
+
                                     <div className="space-y-2">
-                                        <CustomCombobox
-                                            label="Район"
-                                            placeholder={
-                                                formData.region_id
-                                                    ? "Выберите район"
-                                                    : "Сначала выберите регион"
+                                        <Label
+                                            htmlFor="university_group_name"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Группа
+                                        </Label>
+                                        <Input
+                                            id="university_group_name"
+                                            type="text"
+                                            placeholder="ИС-21"
+                                            value={
+                                                formData.university_group_name
                                             }
-                                            value={formData.district_id}
-                                            onChange={(value) =>
+                                            onChange={(e) =>
                                                 handleInputChange(
-                                                    "district_id",
+                                                    "university_group_name",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="form_of_education"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Форма обучения
+                                        </Label>
+                                        <Select
+                                            value={formData.form_of_education}
+                                            onValueChange={(value) =>
+                                                handleInputChange(
+                                                    "form_of_education",
                                                     value
                                                 )
                                             }
-                                            options={
-                                                formData.region_id
-                                                    ? districts
-                                                          .filter(
-                                                              (district: any) =>
-                                                                  district &&
-                                                                  district.district_id &&
-                                                                  district.district_name
-                                                          )
-                                                          .map(
-                                                              (
-                                                                  district: any
-                                                              ) => ({
-                                                                  value: district.district_id.toString(),
-                                                                  label: district.district_name,
-                                                              })
-                                                          )
-                                                    : []
+                                        >
+                                            <SelectTrigger className="h-12 rounded-xl border-gray-200">
+                                                <SelectValue placeholder="Выберите форму обучения" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="1">
+                                                    Дневной
+                                                </SelectItem>
+                                                <SelectItem value="2">
+                                                    Ночной
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="study_period"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Срок обучения (лет)
+                                        </Label>
+                                        <Input
+                                            id="study_period"
+                                            type="number"
+                                            placeholder="4"
+                                            min="1"
+                                            max="10"
+                                            value={formData.study_period}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "study_period",
+                                                    e.target.value
+                                                )
                                             }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="faculty"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Факультет
+                                        </Label>
+                                        <Input
+                                            id="faculty"
+                                            type="text"
+                                            placeholder="TEST"
+                                            value={formData.faculty}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "faculty",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="field_of_study"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Направление
+                                        </Label>
+                                        <Input
+                                            id="field_of_study"
+                                            type="text"
+                                            placeholder="TJT"
+                                            value={formData.field_of_study}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "field_of_study",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
                                 </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-4"></div>
                             </div>
                         </form>
                     </CardContent>

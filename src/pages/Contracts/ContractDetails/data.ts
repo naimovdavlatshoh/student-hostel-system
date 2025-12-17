@@ -1,4 +1,8 @@
-import { GetDataSimple } from "@/services/data";
+import {
+    GetDataSimple,
+    GetDataSimpleBlob,
+    PostDataToken,
+} from "@/services/data";
 import { toast } from "sonner";
 
 export interface ContractPlanPayment {
@@ -83,5 +87,48 @@ export const fetchContractById = async (
         console.error("Error fetching contract detail:", error);
         toast.error("Ошибка загрузки контракта");
         return null;
+    }
+};
+
+export const downloadContractWord = async (id: number): Promise<Blob> => {
+    try {
+        const blob = await GetDataSimpleBlob(`api/contract/word/${id}`);
+        return blob;
+    } catch (error) {
+        console.error("Error downloading contract word:", error);
+        toast.error("Ошибка загрузки документа");
+        throw error;
+    }
+};
+
+export const uploadSignedContract = async (
+    id: number,
+    pdfFile: File
+): Promise<void> => {
+    try {
+        const formData = new FormData();
+        formData.append("contract_pdf", pdfFile);
+
+        await PostDataToken(`api/contract/${id}/upload-signed`, formData);
+        toast.success("PDF контракт успешно загружен");
+    } catch (error: any) {
+        console.error("Error uploading signed contract:", error);
+        toast.error(
+            error?.response?.data?.error ||
+                error?.response?.data?.message ||
+                "Ошибка загрузки PDF контракта"
+        );
+        throw error;
+    }
+};
+
+export const downloadContractPDF = async (id: number): Promise<Blob> => {
+    try {
+        const blob = await GetDataSimpleBlob(`api/contract/pdf/${id}`);
+        return blob;
+    } catch (error) {
+        console.error("Error downloading contract PDF:", error);
+        toast.error("Ошибка загрузки PDF документа");
+        throw error;
     }
 };

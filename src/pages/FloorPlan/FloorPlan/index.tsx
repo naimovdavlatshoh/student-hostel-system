@@ -262,15 +262,14 @@ const FloorPlanPage: React.FC = () => {
                                                                                         key={
                                                                                             bed.bed_id
                                                                                         }
-                                                                                        className={`
-                                                                                        rounded  flex flex-col items-center justify-center text-xs font-bold group
-                                                                                        ${
-                                                                                            bed.bed_status ===
-                                                                                            1
-                                                                                                ? "bg-red-400  text-red-900"
-                                                                                                : "bg-mainbg  text-gray-700"
-                                                                                        }
-                                                                                    `}
+                                                                                        className={cn(
+                                                                                            "rounded flex flex-col items-center justify-center text-xs font-bold group cursor-pointer",
+                                                                                            bed.bed_status === 0
+                                                                                                ? "bg-mainbg text-white"
+                                                                                                : bed.bed_status === 1
+                                                                                                ? "bg-yellow-500 text-yellow-900"
+                                                                                                : "bg-red-500 text-white"
+                                                                                        )}
                                                                                         onClick={() =>
                                                                                             handleBedClick(
                                                                                                 bed,
@@ -314,15 +313,14 @@ const FloorPlanPage: React.FC = () => {
                                                                                         key={
                                                                                             bed.bed_id
                                                                                         }
-                                                                                        className={`
-                                                                                        rounded  flex flex-col items-center justify-center text-xs font-bold group
-                                                                                        ${
-                                                                                            bed.bed_status ===
-                                                                                            1
-                                                                                                ? "bg-red-400  text-red-900"
-                                                                                                : "bg-mainbg  text-gray-700"
-                                                                                        }
-                                                                                    `}
+                                                                                        className={cn(
+                                                                                            "rounded flex flex-col items-center justify-center text-xs font-bold group cursor-pointer",
+                                                                                            bed.bed_status === 0
+                                                                                                ? "bg-mainbg text-white"
+                                                                                                : bed.bed_status === 1
+                                                                                                ? "bg-yellow-500 text-yellow-900"
+                                                                                                : "bg-red-500 text-white"
+                                                                                        )}
                                                                                         onClick={() =>
                                                                                             handleBedClick(
                                                                                                 bed,
@@ -535,12 +533,25 @@ const FloorPlanPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-xs text-gray-500">
-                                        Статус
+                                    <div className="text-xs text-gray-500 mb-1">
+                                        Статус контракта
                                     </div>
-                                    <div className="font-semibold text-gray-900">
-                                        {contractData.contract_status_text}
-                                    </div>
+                                    <Badge
+                                        className={cn(
+                                            "px-2 py-1 text-xs font-semibold",
+                                            contractData.contract_status === 1
+                                                ? "bg-orange-100 text-orange-700"
+                                                : contractData.contract_status === 2
+                                                ? "bg-green-100 text-green-700"
+                                                : "bg-gray-100 text-gray-700"
+                                        )}
+                                    >
+                                        {contractData.contract_status === 1
+                                            ? "Контракт не подписан"
+                                            : contractData.contract_status === 2
+                                            ? "Контракт подписан"
+                                            : contractData.contract_status_text}
+                                    </Badge>
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500">

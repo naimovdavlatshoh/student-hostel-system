@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomCombobox } from "@/components/ui/custom-form";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { ProgressAuto } from "@/components/ui/progress";
 import { toast } from "sonner";
@@ -41,6 +48,10 @@ const EditStudent = () => {
         university_name: "",
         course_level: "",
         university_group_name: "",
+        form_of_education: "",
+        study_period: "",
+        faculty: "",
+        field_of_study: "",
         is_blocked: "0",
     });
 
@@ -83,6 +94,11 @@ const EditStudent = () => {
                         course_level: studentRes.course_level?.toString() || "",
                         university_group_name:
                             studentRes.university_group_name || "",
+                        form_of_education:
+                            studentRes.form_of_education?.toString() || "",
+                        study_period: studentRes.study_period?.toString() || "",
+                        faculty: studentRes.faculty || "",
+                        field_of_study: studentRes.field_of_study || "",
                         is_blocked: studentRes.is_blocked?.toString() || "0",
                     });
 
@@ -176,7 +192,7 @@ const EditStudent = () => {
     return (
         <div className="space-y-6 pb-10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-2 ">
+                <div className="flex items-center gap-2 ">
                     <Link to="/">
                         <Button className="rounded-xl" size={"sm"}>
                             <RiArrowGoBackLine className="w-6 h-6" />
@@ -396,9 +412,6 @@ const EditStudent = () => {
                                             required
                                         />
                                     </div>
-                                </div>
-
-                                <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="phone_number"
@@ -445,7 +458,9 @@ const EditStudent = () => {
                                             className="h-12 rounded-xl border-gray-200"
                                         />
                                     </div>
+                                </div>
 
+                                <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="additional_phone_number"
@@ -533,6 +548,104 @@ const EditStudent = () => {
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     "university_group_name",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="form_of_education"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Форма обучения
+                                        </Label>
+                                        <Select
+                                            value={formData.form_of_education}
+                                            onValueChange={(value) =>
+                                                handleInputChange(
+                                                    "form_of_education",
+                                                    value
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger className="h-12 rounded-xl border-gray-200">
+                                                <SelectValue placeholder="Выберите форму обучения" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="1">
+                                                    Дневной
+                                                </SelectItem>
+                                                <SelectItem value="2">
+                                                    Ночной
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="study_period"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Срок обучения (лет)
+                                        </Label>
+                                        <Input
+                                            id="study_period"
+                                            type="number"
+                                            placeholder="4"
+                                            min="1"
+                                            max="10"
+                                            value={formData.study_period}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "study_period",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="faculty"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Факультет
+                                        </Label>
+                                        <Input
+                                            id="faculty"
+                                            type="text"
+                                            placeholder="TEST"
+                                            value={formData.faculty}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "faculty",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="field_of_study"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Направление
+                                        </Label>
+                                        <Input
+                                            id="field_of_study"
+                                            type="text"
+                                            placeholder="TJT"
+                                            value={formData.field_of_study}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "field_of_study",
                                                     e.target.value
                                                 )
                                             }

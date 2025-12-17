@@ -5,6 +5,7 @@ export interface Contract {
     contract_id: number;
     contract_number: string;
     student_full_name: string;
+    student_image_url?: string | null;
     passport_series: string;
     floor_number: number;
     room_number: number;

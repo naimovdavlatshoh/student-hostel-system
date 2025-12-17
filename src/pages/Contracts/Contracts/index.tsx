@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { HiDotsVertical, HiOutlineEye } from "react-icons/hi";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const ContractsPage: React.FC = () => {
     const [contracts, setContracts] = useState<Contract[]>([]);
@@ -77,15 +79,7 @@ const ContractsPage: React.FC = () => {
         terminated: 0,
     });
 
-    const formatDate = (dateString: string) => {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return dateString;
-        const day = date.getDate().toString().padStart(2, "0");
-        const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        const year = date.getFullYear().toString();
-        return `${day}-${month}-${year}`;
-    };
+
 
     const loadContracts = async (
         page: number,
@@ -328,10 +322,10 @@ const ContractsPage: React.FC = () => {
                                     Студент
                                 </TableHead>
                                 <TableHead className="text-maintx text-center">
-                                    Этаж / Комната / Койка
+                                    Статус
                                 </TableHead>
                                 <TableHead className="text-maintx text-center">
-                                    Период
+                                    Этаж / Комната / Койка
                                 </TableHead>
                                 <TableHead className="text-maintx text-center">
                                     Ежемес. оплата
@@ -382,21 +376,42 @@ const ContractsPage: React.FC = () => {
                                             {contract.contract_number}
                                         </TableCell>
                                         <TableCell className="text-center text-gray-700">
-                                            {contract.student_full_name}
+                                            <div className="flex items-center justify-center gap-3">
+                                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-300 flex-shrink-0">
+                                                    <img
+                                                        src={
+                                                            contract.student_image_url ||
+                                                            "/avatar-1.webp"
+                                                        }
+                                                        alt={
+                                                            contract.student_full_name
+                                                        }
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <span className="text-sm">
+                                                    {contract.student_full_name}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge
+                                                className={cn(
+                                                    "px-2 py-1 text-xs font-semibold",
+                                                    contract.is_terminated === 1
+                                                        ? "bg-orange-100 text-orange-700"
+                                                        : "bg-green-100 text-green-700"
+                                                )}
+                                            >
+                                                {contract.is_terminated === 1
+                                                    ? "Расторгнутый"
+                                                    : "Активный"}
+                                            </Badge>
                                         </TableCell>
                                         <TableCell className="text-center text-gray-700">
                                             Этаж {contract.floor_number},
                                             комната {contract.room_number},
                                             койка {contract.bed_number}
-                                        </TableCell>
-                                        <TableCell className="text-center text-gray-700 text-sm">
-                                            {formatDate(
-                                                contract.contract_start_date
-                                            )}{" "}
-                                            –{" "}
-                                            {formatDate(
-                                                contract.contract_end_date
-                                            )}
                                         </TableCell>
                                         <TableCell className="text-center text-gray-700">
                                             {contract.contract_monthly_payment.toLocaleString()}{" "}
