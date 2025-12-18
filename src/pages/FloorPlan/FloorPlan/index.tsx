@@ -44,6 +44,7 @@ const FloorPlanPage: React.FC = () => {
         room: Room;
         floor: Floor;
     } | null>(null);
+    const [bedFilter, setBedFilter] = useState<"all" | "top" | "bottom">("all");
 
     useEffect(() => {
         const loadFloorPlan = async () => {
@@ -114,23 +115,63 @@ const FloorPlanPage: React.FC = () => {
     }
 
     return (
-        <div className="h-screen bg-gray-50 overflow-hidden flex flex-col">
+        <div className="min-h-screen bg-gray-50 overflow-hidden flex flex-col">
             <div className="flex-shrink-0 px-6 pt-4 pb-2">
-                <div className="flex items-center gap-3">
-                    <Button
-                        onClick={() => navigate(-1)}
-                        className="rounded-xl"
-                        size={"sm"}
-                    >
-                        <RiArrowGoBackLine className="w-6 h-6" />
-                    </Button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">
-                            Планировка
-                        </h1>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Схема расположения этажей, комнат и коек
-                        </p>
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <Button
+                            onClick={() => navigate(-1)}
+                            className="rounded-xl"
+                            size={"sm"}
+                        >
+                            <RiArrowGoBackLine className="w-6 h-6" />
+                        </Button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">
+                                Планировка
+                            </h1>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Схема расположения этажей, комнат и коек
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={() => setBedFilter("all")}
+                            className={cn(
+                                "rounded-xl",
+                                bedFilter === "all"
+                                    ? "bg-black text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            )}
+                            size={"sm"}
+                        >
+                            Все
+                        </Button>
+                        <Button
+                            onClick={() => setBedFilter("top")}
+                            className={cn(
+                                "rounded-xl",
+                                bedFilter === "top"
+                                    ? "bg-black text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            )}
+                            size={"sm"}
+                        >
+                            Верхние
+                        </Button>
+                        <Button
+                            onClick={() => setBedFilter("bottom")}
+                            className={cn(
+                                "rounded-xl",
+                                bedFilter === "bottom"
+                                    ? "bg-black text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            )}
+                            size={"sm"}
+                        >
+                            Нижние
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -192,7 +233,7 @@ const FloorPlanPage: React.FC = () => {
                                     ) : (
                                         <div className="flex-1 min-h-0 flex flex-col">
                                             {/* Pastda xonalar */}
-                                            <div className="flex gap-1 p-2 flex-1 min-h-0 overflow-hidden">
+                                            <div className="flex gap-1 p-2 flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
                                                 {floor.rooms.map((room) => {
                                                     const bedsCount =
                                                         room.beds.length;
@@ -209,6 +250,121 @@ const FloorPlanPage: React.FC = () => {
                                                             "grid-cols-2";
                                                     }
 
+                                                    // Bedlarni tartib raqamiga qarab ikkiga bo'lish
+                                                    const sortedBeds = [
+                                                        ...room.beds,
+                                                    ].sort(
+                                                        (a, b) =>
+                                                            a.bed_number -
+                                                            b.bed_number
+                                                    );
+                                                    const halfIndex = Math.ceil(
+                                                        sortedBeds.length / 2
+                                                    );
+                                                    const leftBedsRaw =
+                                                        sortedBeds.slice(
+                                                            0,
+                                                            halfIndex
+                                                        );
+                                                    const rightBedsRaw =
+                                                        sortedBeds.slice(
+                                                            halfIndex
+                                                        );
+
+                                                    // Har bir qismda juft bedlar yuqorida, toq bedlar pastda
+                                                    const leftBedsSorted =
+                                                        leftBedsRaw.sort(
+                                                            (a, b) => {
+                                                                const aIsEven =
+                                                                    a.bed_number %
+                                                                        2 ===
+                                                                    0;
+                                                                const bIsEven =
+                                                                    b.bed_number %
+                                                                        2 ===
+                                                                    0;
+                                                                if (
+                                                                    aIsEven &&
+                                                                    !bIsEven
+                                                                )
+                                                                    return -1; // Juftlar yuqorida
+                                                                if (
+                                                                    !aIsEven &&
+                                                                    bIsEven
+                                                                )
+                                                                    return 1; // Toqlar pastda
+                                                                return (
+                                                                    a.bed_number -
+                                                                    b.bed_number
+                                                                ); // Bir xil turda tartib raqamiga qarab
+                                                            }
+                                                        );
+
+                                                    const rightBedsSorted =
+                                                        rightBedsRaw.sort(
+                                                            (a, b) => {
+                                                                const aIsEven =
+                                                                    a.bed_number %
+                                                                        2 ===
+                                                                    0;
+                                                                const bIsEven =
+                                                                    b.bed_number %
+                                                                        2 ===
+                                                                    0;
+                                                                if (
+                                                                    aIsEven &&
+                                                                    !bIsEven
+                                                                )
+                                                                    return -1; // Juftlar yuqorida
+                                                                if (
+                                                                    !aIsEven &&
+                                                                    bIsEven
+                                                                )
+                                                                    return 1; // Toqlar pastda
+                                                                return (
+                                                                    a.bed_number -
+                                                                    b.bed_number
+                                                                ); // Bir xil turda tartib raqamiga qarab
+                                                            }
+                                                        );
+
+                                                    // Filter qo'llash
+                                                    const leftBeds =
+                                                        bedFilter === "all"
+                                                            ? leftBedsSorted
+                                                            : bedFilter ===
+                                                              "top"
+                                                            ? leftBedsSorted.filter(
+                                                                  (bed) =>
+                                                                      bed.bed_number %
+                                                                          2 ===
+                                                                      0
+                                                              )
+                                                            : leftBedsSorted.filter(
+                                                                  (bed) =>
+                                                                      bed.bed_number %
+                                                                          2 ===
+                                                                      1
+                                                              );
+
+                                                    const rightBeds =
+                                                        bedFilter === "all"
+                                                            ? rightBedsSorted
+                                                            : bedFilter ===
+                                                              "top"
+                                                            ? rightBedsSorted.filter(
+                                                                  (bed) =>
+                                                                      bed.bed_number %
+                                                                          2 ===
+                                                                      0
+                                                              )
+                                                            : rightBedsSorted.filter(
+                                                                  (bed) =>
+                                                                      bed.bed_number %
+                                                                          2 ===
+                                                                      1
+                                                              );
+
                                                     // Dinamik kenglik - xonalar soniga qarab
                                                     const totalRooms =
                                                         floor.rooms.length;
@@ -221,7 +377,7 @@ const FloorPlanPage: React.FC = () => {
                                                     return (
                                                         <div
                                                             key={room.room_id}
-                                                            className="border-2 rounded-lg bg-white hover:shadow-md transition-all cursor-pointer flex flex-col flex-shrink-0"
+                                                            className="border-2 rounded-lg bg-white hover:shadow-md transition-all cursor-pointer flex flex-col flex-shrink-0 min-h-[40px]"
                                                             style={{
                                                                 width: calculatedWidth,
                                                                 minWidth:
@@ -244,49 +400,41 @@ const FloorPlanPage: React.FC = () => {
                                                                     <div
                                                                         className={`grid ${gridCols} gap-0.5 flex-1 auto-rows-fr`}
                                                                     >
-                                                                        {room.beds
-                                                                            .filter(
-                                                                                (
-                                                                                    _,
-                                                                                    idx
-                                                                                ) =>
-                                                                                    idx %
-                                                                                        2 ===
-                                                                                    0
+                                                                        {leftBeds.map(
+                                                                            (
+                                                                                bed
+                                                                            ) => (
+                                                                                <div
+                                                                                    key={
+                                                                                        bed.bed_id
+                                                                                    }
+                                                                                    className={cn(
+                                                                                        "rounded flex flex-col items-center justify-center text-xs font-bold group cursor-pointer min-h-[40px]",
+                                                                                        bed.bed_status ===
+                                                                                            0
+                                                                                            ? "bg-mainbg text-white"
+                                                                                            : bed.bed_status ===
+                                                                                              1
+                                                                                            ? "bg-yellow-500 text-yellow-900"
+                                                                                            : "bg-red-500 text-white"
+                                                                                    )}
+                                                                                    onClick={() =>
+                                                                                        handleBedClick(
+                                                                                            bed,
+                                                                                            room,
+                                                                                            floor
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    <LuBedSingle className="w-4 h-4 text-white group-hover:hidden" />
+                                                                                    <span className="text-white hidden group-hover:block font-semibold">
+                                                                                        {
+                                                                                            bed.bed_number
+                                                                                        }
+                                                                                    </span>
+                                                                                </div>
                                                                             )
-                                                                            .map(
-                                                                                (
-                                                                                    bed
-                                                                                ) => (
-                                                                                    <div
-                                                                                        key={
-                                                                                            bed.bed_id
-                                                                                        }
-                                                                                        className={cn(
-                                                                                            "rounded flex flex-col items-center justify-center text-xs font-bold group cursor-pointer",
-                                                                                            bed.bed_status === 0
-                                                                                                ? "bg-mainbg text-white"
-                                                                                                : bed.bed_status === 1
-                                                                                                ? "bg-yellow-500 text-yellow-900"
-                                                                                                : "bg-red-500 text-white"
-                                                                                        )}
-                                                                                        onClick={() =>
-                                                                                            handleBedClick(
-                                                                                                bed,
-                                                                                                room,
-                                                                                                floor
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        <LuBedSingle className="w-4 h-4 text-white group-hover:hidden" />
-                                                                                        <span className="text-white hidden group-hover:block font-semibold">
-                                                                                            {
-                                                                                                bed.bed_number
-                                                                                            }
-                                                                                        </span>
-                                                                                    </div>
-                                                                                )
-                                                                            )}
+                                                                        )}
                                                                     </div>
                                                                 </div>
 
@@ -295,49 +443,41 @@ const FloorPlanPage: React.FC = () => {
                                                                     <div
                                                                         className={`grid ${gridCols} gap-0.5 flex-1 auto-rows-fr`}
                                                                     >
-                                                                        {room.beds
-                                                                            .filter(
-                                                                                (
-                                                                                    _,
-                                                                                    idx
-                                                                                ) =>
-                                                                                    idx %
-                                                                                        2 ===
-                                                                                    1
+                                                                        {rightBeds.map(
+                                                                            (
+                                                                                bed
+                                                                            ) => (
+                                                                                <div
+                                                                                    key={
+                                                                                        bed.bed_id
+                                                                                    }
+                                                                                    className={cn(
+                                                                                        "rounded flex flex-col items-center justify-center text-xs font-bold group cursor-pointer min-h-[40px]",
+                                                                                        bed.bed_status ===
+                                                                                            0
+                                                                                            ? "bg-mainbg text-white"
+                                                                                            : bed.bed_status ===
+                                                                                              1
+                                                                                            ? "bg-yellow-500 text-yellow-900"
+                                                                                            : "bg-red-500 text-white"
+                                                                                    )}
+                                                                                    onClick={() =>
+                                                                                        handleBedClick(
+                                                                                            bed,
+                                                                                            room,
+                                                                                            floor
+                                                                                        )
+                                                                                    }
+                                                                                >
+                                                                                    <LuBedSingle className="w-4 h-4 text-white group-hover:hidden" />
+                                                                                    <span className="text-white hidden group-hover:block font-semibold">
+                                                                                        {
+                                                                                            bed.bed_number
+                                                                                        }
+                                                                                    </span>
+                                                                                </div>
                                                                             )
-                                                                            .map(
-                                                                                (
-                                                                                    bed
-                                                                                ) => (
-                                                                                    <div
-                                                                                        key={
-                                                                                            bed.bed_id
-                                                                                        }
-                                                                                        className={cn(
-                                                                                            "rounded flex flex-col items-center justify-center text-xs font-bold group cursor-pointer",
-                                                                                            bed.bed_status === 0
-                                                                                                ? "bg-mainbg text-white"
-                                                                                                : bed.bed_status === 1
-                                                                                                ? "bg-yellow-500 text-yellow-900"
-                                                                                                : "bg-red-500 text-white"
-                                                                                        )}
-                                                                                        onClick={() =>
-                                                                                            handleBedClick(
-                                                                                                bed,
-                                                                                                room,
-                                                                                                floor
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        <LuBedSingle className="w-4 h-4 text-white group-hover:hidden" />
-                                                                                        <span className="text-white hidden group-hover:block font-semibold">
-                                                                                            {
-                                                                                                bed.bed_number
-                                                                                            }
-                                                                                        </span>
-                                                                                    </div>
-                                                                                )
-                                                                            )}
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -541,7 +681,8 @@ const FloorPlanPage: React.FC = () => {
                                             "px-2 py-1 text-xs font-semibold",
                                             contractData.contract_status === 1
                                                 ? "bg-orange-100 text-orange-700"
-                                                : contractData.contract_status === 2
+                                                : contractData.contract_status ===
+                                                  2
                                                 ? "bg-green-100 text-green-700"
                                                 : "bg-gray-100 text-gray-700"
                                         )}

@@ -581,6 +581,9 @@ const EditStudent = () => {
                                                 <SelectItem value="2">
                                                     Ночной
                                                 </SelectItem>
+                                                <SelectItem value="3">
+                                                    Заочный
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
