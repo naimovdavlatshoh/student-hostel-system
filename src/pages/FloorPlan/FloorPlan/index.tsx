@@ -328,42 +328,34 @@ const FloorPlanPage: React.FC = () => {
                                                             }
                                                         );
 
-                                                    // Filter qo'llash
-                                                    const leftBeds =
-                                                        bedFilter === "all"
-                                                            ? leftBedsSorted
-                                                            : bedFilter ===
-                                                              "top"
-                                                            ? leftBedsSorted.filter(
-                                                                  (bed) =>
-                                                                      bed.bed_number %
-                                                                          2 ===
-                                                                      0
-                                                              )
-                                                            : leftBedsSorted.filter(
-                                                                  (bed) =>
-                                                                      bed.bed_number %
-                                                                          2 ===
-                                                                      1
-                                                              );
+                                                    // Filter funksiyasi - bedni tanlangan filterni qanoatlantirishini tekshirish
+                                                    const isBedFiltered = (
+                                                        bed: Bed
+                                                    ) => {
+                                                        if (bedFilter === "all")
+                                                            return true;
+                                                        if (bedFilter === "top")
+                                                            return (
+                                                                bed.bed_number %
+                                                                    2 ===
+                                                                0
+                                                            );
+                                                        if (
+                                                            bedFilter ===
+                                                            "bottom"
+                                                        )
+                                                            return (
+                                                                bed.bed_number %
+                                                                    2 ===
+                                                                1
+                                                            );
+                                                        return true;
+                                                    };
 
+                                                    const leftBeds =
+                                                        leftBedsSorted;
                                                     const rightBeds =
-                                                        bedFilter === "all"
-                                                            ? rightBedsSorted
-                                                            : bedFilter ===
-                                                              "top"
-                                                            ? rightBedsSorted.filter(
-                                                                  (bed) =>
-                                                                      bed.bed_number %
-                                                                          2 ===
-                                                                      0
-                                                              )
-                                                            : rightBedsSorted.filter(
-                                                                  (bed) =>
-                                                                      bed.bed_number %
-                                                                          2 ===
-                                                                      1
-                                                              );
+                                                        rightBedsSorted;
 
                                                     // Dinamik kenglik - xonalar soniga qarab
                                                     const totalRooms =
@@ -403,37 +395,67 @@ const FloorPlanPage: React.FC = () => {
                                                                         {leftBeds.map(
                                                                             (
                                                                                 bed
-                                                                            ) => (
-                                                                                <div
-                                                                                    key={
-                                                                                        bed.bed_id
-                                                                                    }
-                                                                                    className={cn(
-                                                                                        "rounded flex flex-col items-center justify-center text-xs font-bold group cursor-pointer min-h-[40px]",
-                                                                                        bed.bed_status ===
-                                                                                            0
-                                                                                            ? "bg-mainbg text-white"
-                                                                                            : bed.bed_status ===
-                                                                                              1
-                                                                                            ? "bg-yellow-500 text-yellow-900"
-                                                                                            : "bg-red-500 text-white"
-                                                                                    )}
-                                                                                    onClick={() =>
-                                                                                        handleBedClick(
-                                                                                            bed,
-                                                                                            room,
-                                                                                            floor
-                                                                                        )
-                                                                                    }
-                                                                                >
-                                                                                    <LuBedSingle className="w-4 h-4 text-white group-hover:hidden" />
-                                                                                    <span className="text-white hidden group-hover:block font-semibold">
-                                                                                        {
-                                                                                            bed.bed_number
+                                                                            ) => {
+                                                                                const isFiltered =
+                                                                                    isBedFiltered(
+                                                                                        bed
+                                                                                    );
+                                                                                return (
+                                                                                    <div
+                                                                                        key={
+                                                                                            bed.bed_id
                                                                                         }
-                                                                                    </span>
-                                                                                </div>
-                                                                            )
+                                                                                        className={cn(
+                                                                                            "rounded flex flex-col items-center justify-center text-xs font-bold group min-h-[40px]",
+                                                                                            !isFiltered &&
+                                                                                                "opacity-50 cursor-not-allowed",
+                                                                                            isFiltered &&
+                                                                                                "cursor-pointer",
+                                                                                            !isFiltered
+                                                                                                ? "bg-gray-400 text-gray-600"
+                                                                                                : bed.bed_status ===
+                                                                                                  0
+                                                                                                ? "bg-mainbg text-white"
+                                                                                                : bed.bed_status ===
+                                                                                                  1
+                                                                                                ? "bg-yellow-500 text-yellow-900"
+                                                                                                : "bg-red-500 text-white"
+                                                                                        )}
+                                                                                        onClick={() => {
+                                                                                            if (
+                                                                                                isFiltered
+                                                                                            ) {
+                                                                                                handleBedClick(
+                                                                                                    bed,
+                                                                                                    room,
+                                                                                                    floor
+                                                                                                );
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        <LuBedSingle
+                                                                                            className={cn(
+                                                                                                "w-4 h-4 group-hover:hidden",
+                                                                                                isFiltered
+                                                                                                    ? "text-white"
+                                                                                                    : "text-gray-600"
+                                                                                            )}
+                                                                                        />
+                                                                                        <span
+                                                                                            className={cn(
+                                                                                                "hidden group-hover:block font-semibold",
+                                                                                                isFiltered
+                                                                                                    ? "text-white"
+                                                                                                    : "text-gray-600"
+                                                                                            )}
+                                                                                        >
+                                                                                            {
+                                                                                                bed.bed_number
+                                                                                            }
+                                                                                        </span>
+                                                                                    </div>
+                                                                                );
+                                                                            }
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -446,37 +468,67 @@ const FloorPlanPage: React.FC = () => {
                                                                         {rightBeds.map(
                                                                             (
                                                                                 bed
-                                                                            ) => (
-                                                                                <div
-                                                                                    key={
-                                                                                        bed.bed_id
-                                                                                    }
-                                                                                    className={cn(
-                                                                                        "rounded flex flex-col items-center justify-center text-xs font-bold group cursor-pointer min-h-[40px]",
-                                                                                        bed.bed_status ===
-                                                                                            0
-                                                                                            ? "bg-mainbg text-white"
-                                                                                            : bed.bed_status ===
-                                                                                              1
-                                                                                            ? "bg-yellow-500 text-yellow-900"
-                                                                                            : "bg-red-500 text-white"
-                                                                                    )}
-                                                                                    onClick={() =>
-                                                                                        handleBedClick(
-                                                                                            bed,
-                                                                                            room,
-                                                                                            floor
-                                                                                        )
-                                                                                    }
-                                                                                >
-                                                                                    <LuBedSingle className="w-4 h-4 text-white group-hover:hidden" />
-                                                                                    <span className="text-white hidden group-hover:block font-semibold">
-                                                                                        {
-                                                                                            bed.bed_number
+                                                                            ) => {
+                                                                                const isFiltered =
+                                                                                    isBedFiltered(
+                                                                                        bed
+                                                                                    );
+                                                                                return (
+                                                                                    <div
+                                                                                        key={
+                                                                                            bed.bed_id
                                                                                         }
-                                                                                    </span>
-                                                                                </div>
-                                                                            )
+                                                                                        className={cn(
+                                                                                            "rounded flex flex-col items-center justify-center text-xs font-bold group min-h-[40px]",
+                                                                                            !isFiltered &&
+                                                                                                "opacity-50 cursor-not-allowed",
+                                                                                            isFiltered &&
+                                                                                                "cursor-pointer",
+                                                                                            !isFiltered
+                                                                                                ? "bg-gray-400 text-gray-600"
+                                                                                                : bed.bed_status ===
+                                                                                                  0
+                                                                                                ? "bg-mainbg text-white"
+                                                                                                : bed.bed_status ===
+                                                                                                  1
+                                                                                                ? "bg-yellow-500 text-yellow-900"
+                                                                                                : "bg-red-500 text-white"
+                                                                                        )}
+                                                                                        onClick={() => {
+                                                                                            if (
+                                                                                                isFiltered
+                                                                                            ) {
+                                                                                                handleBedClick(
+                                                                                                    bed,
+                                                                                                    room,
+                                                                                                    floor
+                                                                                                );
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        <LuBedSingle
+                                                                                            className={cn(
+                                                                                                "w-4 h-4 group-hover:hidden",
+                                                                                                isFiltered
+                                                                                                    ? "text-white"
+                                                                                                    : "text-gray-600"
+                                                                                            )}
+                                                                                        />
+                                                                                        <span
+                                                                                            className={cn(
+                                                                                                "hidden group-hover:block font-semibold",
+                                                                                                isFiltered
+                                                                                                    ? "text-white"
+                                                                                                    : "text-gray-600"
+                                                                                            )}
+                                                                                        >
+                                                                                            {
+                                                                                                bed.bed_number
+                                                                                            }
+                                                                                        </span>
+                                                                                    </div>
+                                                                                );
+                                                                            }
                                                                         )}
                                                                     </div>
                                                                 </div>
