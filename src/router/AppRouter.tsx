@@ -15,6 +15,7 @@ import CreateContractPage from "@/pages/Contracts/CreateContract";
 import ContractsPage from "@/pages/Contracts/Contracts";
 import ContractDetailsPage from "@/pages/Contracts/ContractDetails";
 import UpdateContractPage from "@/pages/Contracts/UpdateContract";
+import PaymentsPage from "@/pages/Payments/Payments";
 
 const router = createBrowserRouter([
     {
@@ -74,6 +75,10 @@ const router = createBrowserRouter([
             {
                 path: "contracts/:id/edit",
                 element: <UpdateContractPage />,
+            },
+            {
+                path: "payments",
+                element: <PaymentsPage />,
             },
         ],
     },

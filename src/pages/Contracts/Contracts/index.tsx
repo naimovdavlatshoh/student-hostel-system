@@ -376,7 +376,7 @@ const ContractsPage: React.FC = () => {
                                             {contract.contract_number}
                                         </TableCell>
                                         <TableCell className="text-center text-gray-700">
-                                            <div className="flex items-center justify-center gap-3">
+                                            <div className="flex items-center justify-start gap-3">
                                                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-300 flex-shrink-0">
                                                     <img
                                                         src={

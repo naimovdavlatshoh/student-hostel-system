@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,8 @@ interface DatePickerProps {
     placeholder?: string;
     disabled?: boolean;
     className?: string;
+    minDate?: Date;
+    maxDate?: Date;
 }
 
 export function DatePicker({
@@ -24,9 +27,23 @@ export function DatePicker({
     placeholder = "Pick a date",
     disabled = false,
     className,
+    minDate,
+    maxDate,
 }: DatePickerProps) {
+    const [open, setOpen] = useState(false);
+
+    const handleSelect = (selectedDate: Date | undefined) => {
+        if (onSelect) {
+            onSelect(selectedDate);
+        }
+        // Sana tanlanganda popover ni yopish
+        if (selectedDate) {
+            setOpen(false);
+        }
+    };
+
     return (
-        <Popover>
+        <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
@@ -45,8 +62,13 @@ export function DatePicker({
                 <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={onSelect}
+                    onSelect={handleSelect}
                     initialFocus
+                    disabled={(date) => {
+                        if (minDate && date < minDate) return true;
+                        if (maxDate && date > maxDate) return true;
+                        return false;
+                    }}
                 />
             </PopoverContent>
         </Popover>

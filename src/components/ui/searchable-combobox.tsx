@@ -31,6 +31,7 @@ interface SearchableComboboxProps {
     isLoading?: boolean;
     required?: boolean;
     className?: string;
+    onOpen?: () => void;
 }
 
 export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
@@ -43,6 +44,7 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
     isLoading = false,
     required = false,
     className = "",
+    onOpen,
 }) => {
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -57,14 +59,17 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
         }
 
         if (searchTerm.length >= 3) {
+            // 3 yoki undan ko'p belgi bo'lsa search qilamiz
             searchTimeoutRef.current = window.setTimeout(() => {
                 console.log("Calling onSearch with:", searchTerm);
                 onSearch(searchTerm);
             }, 500); // Increased delay to 500ms
         } else if (searchTerm.length === 0) {
-            // When search is cleared, fetch all positions
-            console.log("Calling onSearch with empty string");
-            onSearch("");
+            // Bo'sh qidiruv bo'lganda barcha ma'lumotlarni yuklash
+            searchTimeoutRef.current = window.setTimeout(() => {
+                console.log("Calling onSearch with empty string");
+                onSearch("");
+            }, 300); // Qisqa delay
         }
 
         return () => {
@@ -89,8 +94,14 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
                 open={open}
                 onOpenChange={(newOpen) => {
                     setOpen(newOpen);
+                    if (newOpen && onOpen) {
+                        // Combobox ochilganda onOpen callback ni chaqiramiz
+                        onOpen();
+                    }
                     if (!newOpen) {
                         setSearchTerm(""); // Clear search when dropdown closes
+                        // Bo'sh qidiruv bilan barcha ma'lumotlarni yuklash
+                        onSearch("");
                     }
                 }}
             >
@@ -106,9 +117,9 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl">
-                    <Command className="rounded-xl">
+                    <Command className="rounded-xl" shouldFilter={false}>
                         <CommandInput
-                            placeholder="Поиск должностей..."
+                            placeholder="Поиск контрактов..."
                             value={searchTerm}
                             onValueChange={handleSearchChange}
                         />

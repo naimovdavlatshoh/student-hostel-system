@@ -8,6 +8,7 @@ import { MdOutlineMeetingRoom } from "react-icons/md";
 import { RiHotelBedLine } from "react-icons/ri";
 import { HiOutlineViewGrid } from "react-icons/hi";
 import { RiFileList2Line } from "react-icons/ri";
+import { MdPayment } from "react-icons/md";
 
 interface SidebarProps {
     className?: string;
@@ -43,6 +44,11 @@ const navigation = [
         name: "Планировка",
         href: "/floor-plan",
         icon: <HiOutlineViewGrid className="w-5 h-5" />,
+    },
+    {
+        name: "Оплата",
+        href: "/payments",
+        icon: <MdPayment className="w-5 h-5" />,
     },
 ];
 

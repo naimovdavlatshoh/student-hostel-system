@@ -4,14 +4,18 @@ import { toast } from "sonner";
 export interface Contract {
     contract_id: number;
     contract_number: string;
+    student_id?: number;
     student_full_name: string;
     student_image_url?: string | null;
-    passport_series: string;
+    phone_number?: string;
+    passport_series?: string;
     floor_number: number;
     room_number: number;
     bed_number: number;
+    bed_type?: number;
     contract_start_date: string;
     contract_end_date: string;
+    number_of_months?: number;
     contract_monthly_payment: number;
     contract_total_price: number;
     contract_status: number;
@@ -21,6 +25,8 @@ export interface Contract {
     created_at: string;
     is_terminated: number;
     is_terminated_text?: string;
+    termination_date?: string | null;
+    termination_reason?: string | null;
 }
 
 export interface ContractsApiResponse {
