@@ -46,6 +46,8 @@ import { HiDotsVertical, HiOutlineEye } from "react-icons/hi";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { MdPayment } from "react-icons/md";
+import PaymentModal from "@/components/payments/PaymentModal";
 
 const ContractsPage: React.FC = () => {
     const [contracts, setContracts] = useState<Contract[]>([]);
@@ -78,8 +80,10 @@ const ContractsPage: React.FC = () => {
         active: 0,
         terminated: 0,
     });
-
-
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [selectedContractId, setSelectedContractId] = useState<
+        number | undefined
+    >(undefined);
 
     const loadContracts = async (
         page: number,
@@ -243,6 +247,11 @@ const ContractsPage: React.FC = () => {
         setIsTerminateOpen(false);
         setContractToTerminate(null);
         setTerminationReason("Студент отчислен из ВУЗа");
+    };
+
+    const openPaymentModal = (contract: Contract) => {
+        setSelectedContractId(contract.contract_id);
+        setIsPaymentModalOpen(true);
     };
 
     return (
@@ -459,6 +468,19 @@ const ContractsPage: React.FC = () => {
                                                                 </DropdownMenuItem>
                                                             </Link>
                                                             <DropdownMenuItem
+                                                                className="flex items-center gap-2 cursor-pointer text-green-600 focus:text-green-600"
+                                                                onClick={() =>
+                                                                    openPaymentModal(
+                                                                        contract
+                                                                    )
+                                                                }
+                                                            >
+                                                                <MdPayment className="w-4 h-4" />
+                                                                <span>
+                                                                    Оплатить
+                                                                </span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
                                                                 className="flex items-center gap-2 cursor-pointer text-orange-400 focus:text-orange-400"
                                                                 onClick={() =>
                                                                     openTerminateModal(
@@ -585,6 +607,22 @@ const ContractsPage: React.FC = () => {
                     </div>
                 </div>
             </CustomModal>
+
+            <PaymentModal
+                open={isPaymentModalOpen}
+                onOpenChange={setIsPaymentModalOpen}
+                initialContractId={selectedContractId}
+                contractDisabled={true}
+                onSuccess={() => {
+                    const isTerminated =
+                        activeTab === "active"
+                            ? 0
+                            : activeTab === "terminated"
+                            ? 1
+                            : undefined;
+                    loadContracts(currentPage, itemsPerPage, isTerminated);
+                }}
+            />
         </div>
     );
 };

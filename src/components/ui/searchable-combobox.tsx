@@ -32,6 +32,7 @@ interface SearchableComboboxProps {
     required?: boolean;
     className?: string;
     onOpen?: () => void;
+    disabled?: boolean;
 }
 
 export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
@@ -45,6 +46,7 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
     required = false,
     className = "",
     onOpen,
+    disabled = false,
 }) => {
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -91,8 +93,9 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
                 {required && <span className="text-red-500 ml-1">*</span>}
             </label>
             <Popover
-                open={open}
+                open={disabled ? false : open}
                 onOpenChange={(newOpen) => {
+                    if (disabled) return;
                     setOpen(newOpen);
                     if (newOpen && onOpen) {
                         // Combobox ochilganda onOpen callback ni chaqiramiz
@@ -110,7 +113,8 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
-                        className="w-full justify-between h-12 rounded-xl hover:border-mainbg hover:bg-white"
+                        disabled={disabled}
+                        className="w-full justify-between h-12 rounded-xl hover:border-mainbg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {selectedOption ? selectedOption.label : placeholder}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

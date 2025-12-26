@@ -17,6 +17,8 @@ import {
     uploadSignedContract,
     downloadContractPDF,
 } from "@/pages/Contracts/ContractDetails/data";
+import { MdPayment } from "react-icons/md";
+import PaymentModal from "@/components/payments/PaymentModal";
 
 const ContractDetailsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -29,6 +31,7 @@ const ContractDetailsPage: React.FC = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     const formatDate = (dateString: string) => {
         if (!dateString) return "";
@@ -132,6 +135,10 @@ const ContractDetailsPage: React.FC = () => {
         setIsUploadModalOpen(false);
     };
 
+    const openPaymentModal = () => {
+        setIsPaymentModalOpen(true);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between gap-2">
@@ -203,16 +210,27 @@ const ContractDetailsPage: React.FC = () => {
                                 Расторгнутый
                             </Button>
                         ) : (
-                            <Button
-                                className="rounded-xl bg-black text-white hover:bg-black/80"
-                                size="sm"
-                                type="button"
-                                onClick={() =>
-                                    navigate(`/contracts/${id}/edit`)
-                                }
-                            >
-                                Изменить
-                            </Button>
+                            <>
+                                <Button
+                                    className="rounded-xl bg-maintx text-white hover:bg-maintx/90"
+                                    size="sm"
+                                    type="button"
+                                    onClick={openPaymentModal}
+                                >
+                                    <MdPayment className="w-4 h-4 mr-2" />
+                                    Оплатить
+                                </Button>
+                                <Button
+                                    className="rounded-xl bg-black text-white hover:bg-black/80"
+                                    size="sm"
+                                    type="button"
+                                    onClick={() =>
+                                        navigate(`/contracts/${id}/edit`)
+                                    }
+                                >
+                                    Изменить
+                                </Button>
+                            </>
                         ))}
                 </div>
             </div>
@@ -508,6 +526,18 @@ const ContractDetailsPage: React.FC = () => {
                     )}
                 </div>
             </CustomModal>
+
+            <PaymentModal
+                open={isPaymentModalOpen}
+                onOpenChange={setIsPaymentModalOpen}
+                initialContractId={id ? Number(id) : undefined}
+                contractDisabled={true}
+                onSuccess={() => {
+                    if (id) {
+                        fetchContractById(Number(id)).then(setContract);
+                    }
+                }}
+            />
         </div>
     );
 };
