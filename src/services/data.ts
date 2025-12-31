@@ -2,7 +2,9 @@ import { handleAuthError } from "@/utils/authUtils";
 import axios from "axios";
 
 export const BASE_URL =
-    import.meta.env.VITE_BASE_URL || "https://hostelapi.argon.uz/";
+    import.meta.env.VITE_BASE_URL || "https://api.akbarshoxhouse.uz/";
+// export const BASE_URL =
+//     import.meta.env.VITE_BASE_URL || "https://hostelapi.argon.uz/";
 
 axios.interceptors.request.use(
     (config) => {
