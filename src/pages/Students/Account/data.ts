@@ -86,7 +86,8 @@ export const getAvatarFromDocuments = (
     const photoDoc = documents.find((doc) => doc.document_type === 2);
     if (photoDoc?.document_full_path) {
         const baseUrl =
-            import.meta.env.VITE_BASE_URL || "https://hostelapi.argon.uz";
+            // import.meta.env.VITE_BASE_URL || "https://hostelapi.argon.uz";
+            import.meta.env.VITE_BASE_URL || "https://api.akbarshoxhouse.uz/";
         return baseUrl + photoDoc.document_full_path;
     }
     return null;
