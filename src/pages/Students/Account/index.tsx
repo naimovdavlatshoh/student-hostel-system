@@ -628,7 +628,7 @@ const Account = () => {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                            Копия паспорта (PDF)
+                            Копия паспорта (JPEG)
                         </Label>
                         <Input
                             type="file"
@@ -646,7 +646,7 @@ const Account = () => {
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                            Фото студента (JPG, PNG)
+                            Фото студента (JPG, JPEG)
                         </Label>
                         <Input
                             type="file"
@@ -664,7 +664,7 @@ const Account = () => {
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                            Другой документ (PDF, JPG, PNG)
+                            Другой документ (PDF, JPG, JPEG)
                         </Label>
                         <Input
                             type="file"

@@ -27,7 +27,6 @@ import {
     fetchRegions,
     fetchDistricts,
     validateFile,
-    processDateChange,
     isFormValid,
     createStudent,
 } from "./data";
@@ -99,17 +98,6 @@ const CreateStudent = () => {
     const loadDistricts = async (regionId: string) => {
         const fetchedDistricts = await fetchDistricts(regionId);
         setDistricts(fetchedDistricts);
-    };
-
-    const handleDateChange = (
-        field: "date_day" | "date_month" | "date_year",
-        value: string
-    ) => {
-        const newData = processDateChange(field, value, formData);
-        setFormData((prev) => ({
-            ...prev,
-            ...newData,
-        }));
     };
 
     const handleAvatarClick = () => {
@@ -293,7 +281,7 @@ const CreateStudent = () => {
                                 </div>
 
                                 <div className="text-center text-sm text-gray-500">
-                                    <p>*.jpeg, *.jpg макс 3 Мб</p>
+                                    <p>*.jpeg, *.jpg 200 кб</p>
                                 </div>
 
                                 <div className="w-full space-y-2">
@@ -301,7 +289,7 @@ const CreateStudent = () => {
                                         htmlFor="passport_copy"
                                         className="text-sm font-medium text-gray-700"
                                     >
-                                        Копия паспорта (PDF)
+                                        Копия паспорта (JPEG)
                                     </Label>
                                     <input
                                         ref={passportFileInputRef}
@@ -362,12 +350,12 @@ const CreateStudent = () => {
                                     {formData.course_level || "—"}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
+                            {/* <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">Группа</span>
                                 <span className="text-gray-900 font-medium">
                                     {formData.university_group_name || "—"}
                                 </span>
-                            </div>
+                            </div> */}
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">
                                     Форма обучения
@@ -380,7 +368,7 @@ const CreateStudent = () => {
                                         : "—"}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
+                            {/* <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">
                                     Срок обучения
                                 </span>
@@ -389,21 +377,21 @@ const CreateStudent = () => {
                                         ? `${formData.study_period} лет`
                                         : "—"}
                                 </span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
+                            </div> */}
+                            {/* <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">Факультет</span>
                                 <span className="text-gray-900 font-medium">
                                     {formData.faculty || "—"}
                                 </span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
+                            </div> */}
+                            {/* <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-500">
                                     Направление
                                 </span>
                                 <span className="text-gray-900 font-medium">
                                     {formData.field_of_study || "—"}
                                 </span>
-                            </div>
+                            </div> */}
                         </CardContent>
                     </Card>
                 </div>
@@ -517,50 +505,48 @@ const CreateStudent = () => {
                                         >
                                             Дата рождения
                                         </Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                id="date_day"
-                                                type="text"
-                                                placeholder="ДД"
-                                                maxLength={2}
-                                                value={formData.date_day}
-                                                onChange={(e) =>
-                                                    handleDateChange(
-                                                        "date_day",
-                                                        e.target.value
-                                                    )
+                                        <Input
+                                            id="date_of_birth"
+                                            type="text"
+                                            placeholder="дд-мм-гггг"
+                                            maxLength={10}
+                                            value={
+                                                formData.date_day || formData.date_month || formData.date_year
+                                                    ? `${formData.date_day}${formData.date_day?.length === 2 && formData.date_month ? '-' : ''}${formData.date_month}${formData.date_month?.length === 2 && formData.date_year ? '-' : ''}${formData.date_year}`
+                                                    : ''
+                                            }
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                const numbers = value.replace(/[^\d]/g, '');
+
+                                                let day = '';
+                                                let month = '';
+                                                let year = '';
+
+                                                if (numbers.length > 0) {
+                                                    day = numbers.substring(0, 2);
+                                                    if (parseInt(day) > 31) day = '31';
                                                 }
-                                                className="h-12 rounded-xl border-gray-200 text-center"
-                                            />
-                                            <Input
-                                                id="date_month"
-                                                type="text"
-                                                placeholder="ММ"
-                                                maxLength={2}
-                                                value={formData.date_month}
-                                                onChange={(e) =>
-                                                    handleDateChange(
-                                                        "date_month",
-                                                        e.target.value
-                                                    )
+                                                if (numbers.length > 2) {
+                                                    month = numbers.substring(2, 4);
+                                                    if (parseInt(month) > 12) month = '12';
                                                 }
-                                                className="h-12 rounded-xl border-gray-200 text-center"
-                                            />
-                                            <Input
-                                                id="date_year"
-                                                type="text"
-                                                placeholder="ГГГГ"
-                                                maxLength={4}
-                                                value={formData.date_year}
-                                                onChange={(e) =>
-                                                    handleDateChange(
-                                                        "date_year",
-                                                        e.target.value
-                                                    )
+                                                if (numbers.length > 4) {
+                                                    year = numbers.substring(4, 8);
                                                 }
-                                                className="h-12 rounded-xl border-gray-200 text-center"
-                                            />
-                                        </div>
+
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    date_day: day,
+                                                    date_month: month,
+                                                    date_year: year,
+                                                    date_of_birth: day.length === 2 && month.length === 2 && year.length === 4
+                                                        ? `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+                                                        : ''
+                                                }));
+                                            }}
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
                                     </div>
 
                                     <div className="space-y-2">
@@ -623,52 +609,7 @@ const CreateStudent = () => {
                                             }
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label
-                                            htmlFor="phone_number"
-                                            className="text-sm font-medium text-gray-700"
-                                        >
-                                            Номер телефона
-                                        </Label>
-                                        <Input
-                                            id="phone_number"
-                                            type="tel"
-                                            placeholder="+998901234567"
-                                            value={formData.phone_number}
-                                            onChange={(e) =>
-                                                handleInputChange(
-                                                    "phone_number",
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="h-12 rounded-xl border-gray-200"
-                                        />
-                                    </div>
 
-                                    <div className="space-y-2">
-                                        <Label
-                                            htmlFor="owner_additional_phone_number"
-                                            className="text-sm font-medium text-gray-700"
-                                        >
-                                            Дополнительный номер телефона
-                                            владельца
-                                        </Label>
-                                        <Input
-                                            id="owner_additional_phone_number"
-                                            type="tel"
-                                            placeholder="Владелец номера телефона"
-                                            value={
-                                                formData.owner_additional_phone_number
-                                            }
-                                            onChange={(e) =>
-                                                handleInputChange(
-                                                    "owner_additional_phone_number",
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="h-12 rounded-xl border-gray-200"
-                                        />
-                                    </div>
                                 </div>
 
                                 <div className="space-y-4">
@@ -742,7 +683,7 @@ const CreateStudent = () => {
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label
                                             htmlFor="university_group_name"
                                             className="text-sm font-medium text-gray-700"
@@ -764,7 +705,7 @@ const CreateStudent = () => {
                                             }
                                             className="h-12 rounded-xl border-gray-200"
                                         />
-                                    </div>
+                                    </div> */}
 
                                     <div className="space-y-2">
                                         <Label
@@ -799,7 +740,7 @@ const CreateStudent = () => {
                                         </Select>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label
                                             htmlFor="study_period"
                                             className="text-sm font-medium text-gray-700"
@@ -821,9 +762,9 @@ const CreateStudent = () => {
                                             }
                                             className="h-12 rounded-xl border-gray-200"
                                         />
-                                    </div>
+                                    </div> */}
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label
                                             htmlFor="faculty"
                                             className="text-sm font-medium text-gray-700"
@@ -843,9 +784,9 @@ const CreateStudent = () => {
                                             }
                                             className="h-12 rounded-xl border-gray-200"
                                         />
-                                    </div>
+                                    </div> */}
 
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <Label
                                             htmlFor="field_of_study"
                                             className="text-sm font-medium text-gray-700"
@@ -860,6 +801,52 @@ const CreateStudent = () => {
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     "field_of_study",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div> */}
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="phone_number"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Номер телефона
+                                        </Label>
+                                        <Input
+                                            id="phone_number"
+                                            type="tel"
+                                            placeholder="+998901234567"
+                                            value={formData.phone_number}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "phone_number",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="owner_additional_phone_number"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Дополнительный номер телефона
+                                            владельца
+                                        </Label>
+                                        <Input
+                                            id="owner_additional_phone_number"
+                                            type="tel"
+                                            placeholder="Владелец номера телефона"
+                                            value={
+                                                formData.owner_additional_phone_number
+                                            }
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "owner_additional_phone_number",
                                                     e.target.value
                                                 )
                                             }

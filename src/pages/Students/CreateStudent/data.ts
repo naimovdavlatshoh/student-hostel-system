@@ -134,11 +134,11 @@ export const isFormValid = (formData: FormData): boolean => {
         formData.phone_number.trim() !== "" &&
         formData.university_name.trim() !== "" &&
         formData.course_level !== "" &&
-        formData.university_group_name.trim() !== "" &&
+        // formData.university_group_name.trim() !== "" &&
         formData.form_of_education !== "" &&
-        formData.study_period !== "" &&
-        formData.faculty.trim() !== "" &&
-        formData.field_of_study.trim() !== "" &&
+        // formData.study_period !== "" &&
+        // formData.faculty.trim() !== "" &&
+        // formData.field_of_study.trim() !== "" &&
         formData.passport_copy !== null &&
         formData.student_photo !== null
     );
@@ -181,14 +181,14 @@ export const createStudent = async (formData: FormData): Promise<void> => {
             formData.university_name.trim()
         );
         submitFormData.append("course_level", formData.course_level);
-        submitFormData.append(
-            "university_group_name",
-            formData.university_group_name.trim()
-        );
+        // submitFormData.append(
+        //     "university_group_name",
+        //     formData.university_group_name.trim()
+        // );
         submitFormData.append("form_of_education", formData.form_of_education);
-        submitFormData.append("study_period", formData.study_period);
-        submitFormData.append("faculty", formData.faculty.trim());
-        submitFormData.append("field_of_study", formData.field_of_study.trim());
+        // submitFormData.append("study_period", formData.study_period);
+        // submitFormData.append("faculty", formData.faculty.trim());
+        // submitFormData.append("field_of_study", formData.field_of_study.trim());
 
         if (formData.passport_copy) {
             submitFormData.append("passport_copy", formData.passport_copy);

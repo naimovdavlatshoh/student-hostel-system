@@ -169,16 +169,16 @@ export const updateStudent = async (
                 formData.additional_phone_number.trim() || null,
             university_name: formData.university_name.trim(),
             course_level: parseInt(formData.course_level),
-            university_group_name:
-                formData.university_group_name.trim() || null,
+            // university_group_name:
+            //     formData.university_group_name.trim() || null,
             form_of_education: formData.form_of_education
                 ? parseInt(formData.form_of_education)
                 : null,
-            study_period: formData.study_period
-                ? parseInt(formData.study_period)
-                : null,
-            faculty: formData.faculty.trim() || null,
-            field_of_study: formData.field_of_study.trim() || null,
+            // study_period: formData.study_period
+            //     ? parseInt(formData.study_period)
+            //     : null,
+            // faculty: formData.faculty.trim() || null,
+            // field_of_study: formData.field_of_study.trim() || null,
             is_blocked: parseInt(formData.is_blocked),
         };
 
