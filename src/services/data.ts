@@ -5,6 +5,8 @@ export const BASE_URL =
     import.meta.env.VITE_BASE_URL || "https://api.akbarshoxhouse.uz/";
 // export const BASE_URL =
 //     import.meta.env.VITE_BASE_URL || "https://hostelapi.argon.uz/";
+// export const BASE_URL =
+//     import.meta.env.VITE_BASE_URL || "https://apiyotoqxona.bsmi.uz/";
 
 axios.interceptors.request.use(
     (config) => {
@@ -143,7 +145,7 @@ export const CreatePayment = async (paymentData: {
     arrival_id: number;
     payment_amount: number;
     payment_method: number; // 1-Наличка, 2-Терминал, 3-Клик, 4-Перечисление
-    cash_type: number; // 0 - Доллар, 1 - сум
+    cash_type: number;
     comments?: string;
 }) => {
     const response = await PostDataTokenJson(

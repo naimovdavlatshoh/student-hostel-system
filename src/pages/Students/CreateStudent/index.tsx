@@ -613,6 +613,30 @@ const CreateStudent = () => {
                                 </div>
 
                                 <div className="space-y-4">
+                                <div className="space-y-2">
+                                        <Label
+                                            htmlFor="owner_additional_phone_number"
+                                            className="text-sm font-medium text-gray-700"
+                                        >
+                                            Дополнительный номер телефона
+                                            владельца
+                                        </Label>
+                                        <Input
+                                            id="owner_additional_phone_number"
+                                            type="tel"
+                                            placeholder="Владелец номера телефона"
+                                            value={
+                                                formData.owner_additional_phone_number
+                                            }
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "owner_additional_phone_number",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="h-12 rounded-xl border-gray-200"
+                                        />
+                                    </div>
                                     <div className="space-y-2">
                                         <Label
                                             htmlFor="additional_phone_number"
@@ -829,30 +853,7 @@ const CreateStudent = () => {
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label
-                                            htmlFor="owner_additional_phone_number"
-                                            className="text-sm font-medium text-gray-700"
-                                        >
-                                            Дополнительный номер телефона
-                                            владельца
-                                        </Label>
-                                        <Input
-                                            id="owner_additional_phone_number"
-                                            type="tel"
-                                            placeholder="Владелец номера телефона"
-                                            value={
-                                                formData.owner_additional_phone_number
-                                            }
-                                            onChange={(e) =>
-                                                handleInputChange(
-                                                    "owner_additional_phone_number",
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="h-12 rounded-xl border-gray-200"
-                                        />
-                                    </div>
+
                                 </div>
                             </div>
 

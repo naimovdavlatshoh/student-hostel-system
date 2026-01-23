@@ -416,18 +416,18 @@ const Account = () => {
                                             <CustomCombobox
                                                 label="Регион"
                                                 placeholder="Регион"
-                                                value={student.region_id.toString()}
+                                                value={student?.region_id?.toString()}
                                                 onChange={() => {}}
                                                 options={regions
                                                     .filter(
                                                         (region: any) =>
                                                             region &&
-                                                            region.region_id &&
-                                                            region.region_name
+                                                            region?.region_id &&
+                                                            region?.region_name
                                                     )
                                                     .map((region: any) => ({
-                                                        value: region.region_id.toString(),
-                                                        label: region.region_name,
+                                                        value: region?.region_id?.toString(),
+                                                        label: region?.region_name,
                                                     }))}
                                             />
                                         </div>
@@ -435,18 +435,18 @@ const Account = () => {
                                             <CustomCombobox
                                                 label="Район"
                                                 placeholder="Район"
-                                                value={student.district_id.toString()}
+                                                value={student?.district_id?.toString()}
                                                 onChange={() => {}}
                                                 options={districts
                                                     .filter(
                                                         (district: any) =>
                                                             district &&
-                                                            district.district_id &&
-                                                            district.district_name
+                                                            district?.district_id &&
+                                                            district?.district_name
                                                     )
                                                     .map((district: any) => ({
-                                                        value: district.district_id.toString(),
-                                                        label: district.district_name,
+                                                        value: district?.district_id?.toString(),
+                                                        label: district?.district_name,
                                                     }))}
                                             />
                                         </div>
@@ -456,7 +456,7 @@ const Account = () => {
                                             </Label>
                                             <Input
                                                 type="tel"
-                                                value={student.phone_number}
+                                                value={student?.phone_number}
                                                 readOnly
                                                 className="h-12 rounded-xl border-gray-200 bg-gray-50"
                                             />

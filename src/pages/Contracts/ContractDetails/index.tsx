@@ -392,6 +392,8 @@ const ContractDetailsPage: React.FC = () => {
                                                 "ml-1",
                                                 contract.payment_status === 1
                                                     ? "bg-green-100 text-green-700"
+                                                    : contract.payment_status === 2
+                                                    ? "bg-yellow-100 text-yellow-700"
                                                     : "bg-red-100 text-red-700"
                                             )}
                                         >
@@ -417,6 +419,15 @@ const ContractDetailsPage: React.FC = () => {
                                             сум
                                         </span>
                                     </div>
+                                    {contract.payment_status === 2 && (
+                                        <div className="text-gray-900">
+                                            Оплачено:{" "}
+                                            <span className="font-semibold text-green-600">
+                                                {contract.plan.statistics.total_paid.toLocaleString()}{" "}
+                                                сум
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="text-gray-900">
                                         Осталось оплатить:{" "}
                                         <span className="font-semibold">
@@ -450,7 +461,7 @@ const ContractDetailsPage: React.FC = () => {
                                                 {p.monthly_payment_date}
                                             </div>
                                             <div className="text-gray-900 font-semibold">
-                                                {p.monthly_fee.toLocaleString()}{" "}
+                                                {p.monthly_fee.toLocaleString()}/ <span className={p.monthly_fee === p.payment_amount ? "text-green-500" : p.payment_amount > 0 ? "text-yellow-500" : "text-red-600"}>{p.payment_amount>0? p.payment_amount.toLocaleString() : 0}</span>{" "}
                                                 сум
                                             </div>
                                             <div
@@ -458,11 +469,15 @@ const ContractDetailsPage: React.FC = () => {
                                                     "px-2 py-0.5 rounded-full text-xs",
                                                     p.payment_status === 1
                                                         ? "bg-green-100 text-green-700"
+                                                        : p.payment_status === 2
+                                                        ? "bg-yellow-100 text-yellow-700"
                                                         : "bg-red-100 text-red-700"
                                                 )}
                                             >
                                                 {p.payment_status === 1
                                                     ? "Оплачен"
+                                                    : p.payment_status === 2
+                                                    ? "Частично"
                                                     : "Не оплачен"}
                                             </div>
                                         </div>

@@ -11,6 +11,11 @@
 export const handleAuthError = (error: any): boolean => {
     // Check if it's a 401 Unauthorized error
     if (error?.response?.status === 401 || error?.status === 401) {
+        // Don't handle 401 errors on login page - let the login form handle it
+        if (typeof window !== "undefined" && window.location.pathname === "/login") {
+            return false; // Don't handle, let the form's catch block handle it
+        }
+
         console.log(
             "401 Unauthorized error detected. Clearing local storage and reloading page..."
         );
@@ -32,11 +37,7 @@ export const handleAuthError = (error: any): boolean => {
         // Redirect to login after a short delay to ensure storage is cleared
         setTimeout(() => {
             if (typeof window !== "undefined") {
-                if (window.location.pathname === "/login") {
-                    window.location.reload();
-                } else {
-                    window.location.replace("/login");
-                }
+                window.location.replace("/login");
             }
         }, 100);
 
