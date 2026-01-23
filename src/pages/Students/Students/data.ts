@@ -42,18 +42,24 @@ export interface Counts {
     all: number;
     active: number;
     blocked: number;
+    not_uploaded: number;
 }
 
 export const fetchStudents = async (
     page: number = 1,
     limit: number = 10,
-    isBlocked?: number
+    isBlocked?: number,
+    availableInTerminal?: number
 ): Promise<{ students: Student[]; totalPages: number }> => {
     try {
         const blockedParam =
             isBlocked !== undefined ? `&is_blocked=${isBlocked}` : "";
+        const terminalParam =
+            availableInTerminal !== undefined
+                ? `&available_in_terminal=${availableInTerminal}`
+                : "";
         const data: ApiResponse = await GetDataSimple(
-            `api/student/list?page=${page}&limit=${limit}${blockedParam}`
+            `api/student/list?page=${page}&limit=${limit}${blockedParam}${terminalParam}`
         );
 
         return {
@@ -76,15 +82,19 @@ export const fetchCounts = async (): Promise<Counts> => {
         const blockedRes = await GetDataSimple(
             `api/student/list?page=1&limit=1&is_blocked=1`
         );
+        const notUploadedRes = await GetDataSimple(
+            `api/student/list?page=1&limit=1&available_in_terminal=0`
+        );
 
         return {
             all: allRes?.count || 0,
             active: activeRes?.count || 0,
             blocked: blockedRes?.count || 0,
+            not_uploaded: notUploadedRes?.count || 0,
         };
     } catch (error) {
         console.error("Error fetching counts:", error);
-        return { all: 0, active: 0, blocked: 0 };
+        return { all: 0, active: 0, blocked: 0, not_uploaded: 0 };
     }
 };
 
@@ -110,6 +120,10 @@ export const searchStudents = async (
         } else if (activeTab === "blocked") {
             filteredResults = filteredResults.filter(
                 (student: Student) => student.is_blocked === 1
+            );
+        } else if (activeTab === "not_uploaded") {
+            filteredResults = filteredResults.filter(
+                (student: Student) => student.available_in_terminal === 0
             );
         }
 

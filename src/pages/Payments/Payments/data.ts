@@ -113,6 +113,40 @@ export interface ContractInfo {
     payments: any[];
 }
 
+export interface ContractPlanPayment {
+    id: number;
+    contract_id: number;
+    monthly_payment_date: string;
+    monthly_fee: number;
+    payment_amount: number;
+    payment_status: number;
+    created_at: string;
+    updated_at: string | null;
+}
+
+export interface ContractStatistics {
+    total_months: number;
+    paid_months: number;
+    unpaid_months: number;
+    total_fee: number;
+    total_paid: number;
+    remaining_amount: number;
+    completion_percentage: number;
+}
+
+export interface ContractPlan {
+    payments: ContractPlanPayment[];
+    statistics: ContractStatistics;
+}
+
+export interface ContractPaymentDetail {
+    contract_id: number;
+    contract_number: string;
+    contract_monthly_payment: number;
+    contract_total_price: number;
+    plan: ContractPlan;
+}
+
 export const fetchContractInfo = async (
     contractId: number
 ): Promise<ContractInfo> => {
@@ -145,5 +179,20 @@ export const createPayment = async (
                 "Ошибка создания платежа"
         );
         throw error;
+    }
+};
+
+export const fetchContractPaymentDetail = async (
+    contractId: number
+): Promise<ContractPaymentDetail | null> => {
+    try {
+        const data: ContractPaymentDetail = await GetDataSimple(
+            `api/contract/${contractId}`
+        );
+        return data;
+    } catch (error) {
+        console.error("Error fetching contract payment detail:", error);
+        toast.error("Ошибка загрузки данных контракта");
+        return null;
     }
 };

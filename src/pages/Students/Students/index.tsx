@@ -58,6 +58,7 @@ const Students = () => {
         all: 0,
         active: 0,
         blocked: 0,
+        not_uploaded: 0,
     });
 
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -84,11 +85,12 @@ const Students = () => {
     const loadStudents = async (
         page: number,
         limit: number,
-        isBlocked?: number
+        isBlocked?: number,
+        availableInTerminal?: number
     ) => {
         try {
             const { students: fetchedStudents, totalPages: fetchedTotalPages } =
-                await fetchStudents(page, limit, isBlocked);
+                await fetchStudents(page, limit, isBlocked, availableInTerminal);
             setStudents(fetchedStudents);
             setTotalPages(fetchedTotalPages);
         } catch (error) {
@@ -111,8 +113,9 @@ const Students = () => {
                 : activeTab === "blocked"
                 ? 1
                 : undefined;
+        const availableInTerminal = activeTab === "not_uploaded" ? 0 : undefined;
         setLoading(true);
-        loadStudents(page, itemsPerPage, isBlocked);
+        loadStudents(page, itemsPerPage, isBlocked, availableInTerminal);
     };
 
     const handleTabChange = (value: string) => {
@@ -122,7 +125,8 @@ const Students = () => {
         setLoading(true);
         const isBlocked =
             value === "active" ? 0 : value === "blocked" ? 1 : undefined;
-        loadStudents(1, itemsPerPage, isBlocked);
+        const availableInTerminal = value === "not_uploaded" ? 0 : undefined;
+        loadStudents(1, itemsPerPage, isBlocked, availableInTerminal);
     };
 
     const handleItemsPerPageChange = (value: string) => {
@@ -136,7 +140,8 @@ const Students = () => {
                 : activeTab === "blocked"
                 ? 1
                 : undefined;
-        loadStudents(1, newLimit, isBlocked);
+        const availableInTerminal = activeTab === "not_uploaded" ? 0 : undefined;
+        loadStudents(1, newLimit, isBlocked, availableInTerminal);
     };
 
     const handleSearchChange = (value: string) => {
@@ -154,8 +159,9 @@ const Students = () => {
                         : activeTab === "blocked"
                         ? 1
                         : undefined;
+                const availableInTerminal = activeTab === "not_uploaded" ? 0 : undefined;
                 setLoading(true);
-                loadStudents(currentPage, itemsPerPage, isBlocked);
+                loadStudents(currentPage, itemsPerPage, isBlocked, availableInTerminal);
                 return;
             }
 
@@ -202,9 +208,10 @@ const Students = () => {
                     : activeTab === "blocked"
                     ? 1
                     : undefined;
+            const availableInTerminal = activeTab === "not_uploaded" ? 0 : undefined;
             setLoading(true);
             await Promise.all([
-                loadStudents(currentPage, itemsPerPage, isBlocked),
+                loadStudents(currentPage, itemsPerPage, isBlocked, availableInTerminal),
                 loadCounts(),
             ]);
             setIsDeleteOpen(false);
@@ -235,9 +242,10 @@ const Students = () => {
                     : activeTab === "blocked"
                     ? 1
                     : undefined;
+            const availableInTerminal = activeTab === "not_uploaded" ? 0 : undefined;
             setLoading(true);
             await Promise.all([
-                loadStudents(currentPage, itemsPerPage, isBlocked),
+                loadStudents(currentPage, itemsPerPage, isBlocked, availableInTerminal),
                 loadCounts(),
             ]);
             setIsUploadOpen(false);
@@ -341,6 +349,15 @@ const Students = () => {
                                     Заблокированные{" "}
                                     <span className="ml-2 px-2 py-0.5 rounded-sm bg-red-100 text-red-700 text-xs font-semibold">
                                         {counts.blocked}
+                                    </span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="not_uploaded"
+                                    className="data-[state=active]:bg-transparent data-[state=active]:text-orange-600 data-[state=active]:border-b-2 data-[state=active]:border-orange-600 rounded-none px-4 py-2 font-medium text-gray-500 hover:text-gray-700"
+                                >
+                                    Не загружено{" "}
+                                    <span className="ml-2 px-2 py-0.5 rounded-sm bg-orange-100 text-orange-700 text-xs font-semibold">
+                                        {counts.not_uploaded}
                                     </span>
                                 </TabsTrigger>
                             </TabsList>

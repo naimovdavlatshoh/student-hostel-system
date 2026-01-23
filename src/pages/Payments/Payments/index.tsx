@@ -23,7 +23,14 @@ import {
 import { Button } from "@/components/ui/button";
 import CustomPagination from "@/components/ui/custom-pagination";
 import SearchInput from "@/components/ui/search-input";
-import { Payment, deletePayment, fetchPayments, searchPayments } from "./data";
+import {
+    Payment,
+    deletePayment,
+    fetchPayments,
+    searchPayments,
+    ContractPaymentDetail,
+    fetchContractPaymentDetail,
+} from "./data";
 import { IoMdAdd } from "react-icons/io";
 import CustomModal from "@/components/ui/custom-modal";
 import PaymentModal from "@/components/payments/PaymentModal";
@@ -39,6 +46,7 @@ import { MdMessage } from "react-icons/md";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { Separator } from "@/components/ui/separator";
 
 const PaymentsPage: React.FC = () => {
     const [payments, setPayments] = useState<Payment[]>([]);
@@ -54,6 +62,10 @@ const PaymentsPage: React.FC = () => {
         null
     );
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isPaymentDetailOpen, setIsPaymentDetailOpen] = useState(false);
+    const [contractDetail, setContractDetail] =
+        useState<ContractPaymentDetail | null>(null);
+    const [loadingDetail, setLoadingDetail] = useState(false);
 
     const loadPayments = async (page: number, limit: number) => {
         try {
@@ -148,6 +160,19 @@ const PaymentsPage: React.FC = () => {
             month: "2-digit",
             day: "2-digit",
         });
+    };
+
+    const openPaymentDetail = async (contractId: number) => {
+        setLoadingDetail(true);
+        setIsPaymentDetailOpen(true);
+        const detail = await fetchContractPaymentDetail(contractId);
+        setContractDetail(detail);
+        setLoadingDetail(false);
+    };
+
+    const closePaymentDetail = () => {
+        setIsPaymentDetailOpen(false);
+        setContractDetail(null);
     };
 
     return (
@@ -307,7 +332,18 @@ const PaymentsPage: React.FC = () => {
                                                 </span>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-right whitespace-nowrap">
+                                        <TableCell className="text-right whitespace-nowrap flex items-center justify-end gap-2">
+                                        <Button variant="ghost"
+                                                        className="flex items-center gap-2 cursor-pointer"
+                                                        onClick={() =>
+                                                            openPaymentDetail(
+                                                                payment.contract_id
+                                                            )
+                                                        }
+                                                    >
+                                                        <HiOutlineEye className="w-4 h-4" />
+
+                                                    </Button>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <button className="rounded-full outline-none focus:outline-none focus:ring-0 focus:border-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:border-0 hover:bg-gray-200 p-2 transition-colors duration-200">
@@ -315,6 +351,7 @@ const PaymentsPage: React.FC = () => {
                                                     </button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
+
                                                     <Link
                                                         to={`/contracts/${payment.contract_id}`}
                                                     >
@@ -410,6 +447,128 @@ const PaymentsPage: React.FC = () => {
                 onOpenChange={setIsAddModalOpen}
                 onSuccess={() => loadPayments(currentPage, itemsPerPage)}
             />
+
+            <CustomModal
+                showTrigger={false}
+                open={isPaymentDetailOpen}
+                onOpenChange={setIsPaymentDetailOpen}
+                title="Детали платежа"
+                showFooter={false}
+                size="lg"
+                onCancel={closePaymentDetail}
+            >
+                <div className="space-y-4">
+                    {loadingDetail ? (
+                        <div className="flex items-center justify-center py-10 space-x-2">
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                            <span className="text-gray-500 text-sm">
+                                Загрузка...
+                            </span>
+                        </div>
+                    ) : !contractDetail ? (
+                        <div className="text-sm text-gray-500 text-center py-4">
+                            Данные не найдены
+                        </div>
+                    ) : (
+                        <>
+                            <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+                                <div className="text-xs text-gray-500">
+                                    Финансы
+                                </div>
+                                <div className="text-gray-900">
+                                    Ежемесячно:{" "}
+                                    <span className="font-semibold">
+                                        {contractDetail.contract_monthly_payment.toLocaleString()}{" "}
+                                        сум
+                                    </span>
+                                </div>
+                                <div className="text-gray-900">
+                                    Итого:{" "}
+                                    <span className="font-semibold">
+                                        {contractDetail.contract_total_price.toLocaleString()}{" "}
+                                        сум
+                                    </span>
+                                </div>
+                                <div className="text-gray-900">
+                                    Оплачено:{" "}
+                                    <span className="font-semibold text-green-600">
+                                        {contractDetail.plan.statistics.total_paid.toLocaleString()}{" "}
+                                        сум
+                                    </span>
+                                </div>
+                                <div className="text-gray-900">
+                                    Осталось оплатить:{" "}
+                                    <span className="font-semibold">
+                                        {contractDetail.plan.statistics.remaining_amount.toLocaleString()}{" "}
+                                        сум
+                                    </span>
+                                </div>
+                                <div className="text-gray-900">
+                                    Оплачено месяцев:{" "}
+                                    {contractDetail.plan.statistics.paid_months}{" "}
+                                    из{" "}
+                                    {contractDetail.plan.statistics.total_months}
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="space-y-2 text-sm">
+                                <div className="text-xs text-gray-500">
+                                    График платежей
+                                </div>
+                                <div className="max-h-64 overflow-auto space-y-2 pr-1">
+                                    {contractDetail.plan.payments.map((p) => (
+                                        <div
+                                            key={p.id}
+                                            className="flex justify-between items-center bg-gray-50 rounded-lg px-3 py-2"
+                                        >
+                                            <div className="text-gray-700 text-xs">
+                                                {p.monthly_payment_date}
+                                            </div>
+                                            <div className="text-gray-900 font-semibold text-xs">
+                                                {p.monthly_fee.toLocaleString()}
+                                                /{" "}
+                                                <span
+                                                    className={
+                                                        p.monthly_fee ===
+                                                        p.payment_amount
+                                                            ? "text-green-500"
+                                                            : p.payment_amount > 0
+                                                            ? "text-yellow-500"
+                                                            : "text-red-600"
+                                                    }
+                                                >
+                                                    {p.payment_amount > 0
+                                                        ? p.payment_amount.toLocaleString()
+                                                        : 0}
+                                                </span>{" "}
+                                                сум
+                                            </div>
+                                            <div
+                                                className={cn(
+                                                    "px-2 py-0.5 rounded-full text-xs",
+                                                    p.payment_status === 1
+                                                        ? "bg-green-100 text-green-700"
+                                                        : p.payment_status === 2
+                                                        ? "bg-yellow-100 text-yellow-700"
+                                                        : "bg-red-100 text-red-700"
+                                                )}
+                                            >
+                                                {p.payment_status === 1
+                                                    ? "Оплачен"
+                                                    : p.payment_status === 2
+                                                    ? "Частично"
+                                                    : "Не оплачен"}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </CustomModal>
         </div>
     );
 };
